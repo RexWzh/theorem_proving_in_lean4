@@ -13,6 +13,4 @@ git init
 cp -r ../out/./ .
 git add -A
 git commit -m "Update `date`"
-git push https://github.com/leanprover/theorem_proving_in_lean4.git +HEAD:gh-pages
-cd ..
-rm -rf deploy
+git push git@main.github.com:RexWzh/theorem_proving_in_lean4.git +HEAD:gh-pages
