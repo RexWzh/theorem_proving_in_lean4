@@ -1,0 +1,787 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>命题和证明 - Theorem Proving in Lean 4</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="title_page.html">Lean 4中的定理证明</a></li><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> 引言</a></li><li class="chapter-item expanded "><a href="dependent_type_theory.html"><strong aria-hidden="true">2.</strong> 依赖类型论</a></li><li class="chapter-item expanded "><a href="propositions_and_proofs.html" class="active"><strong aria-hidden="true">3.</strong> 命题和证明</a></li><li class="chapter-item expanded "><a href="quantifiers_and_equality.html"><strong aria-hidden="true">4.</strong> 量词和相等</a></li><li class="chapter-item expanded "><a href="tactics.html"><strong aria-hidden="true">5.</strong> 策略</a></li><li class="chapter-item expanded "><a href="interacting_with_lean.html"><strong aria-hidden="true">6.</strong> 与Lean交互</a></li><li class="chapter-item expanded "><a href="inductive_types.html"><strong aria-hidden="true">7.</strong> 归纳类型</a></li><li class="chapter-item expanded "><a href="induction_and_recursion.html"><strong aria-hidden="true">8.</strong> 归纳和递归</a></li><li class="chapter-item expanded "><a href="structures_and_records.html"><strong aria-hidden="true">9.</strong> 结构和记录</a></li><li class="chapter-item expanded "><a href="type_classes.html"><strong aria-hidden="true">10.</strong> 类型类</a></li><li class="chapter-item expanded "><a href="conv.html"><strong aria-hidden="true">11.</strong> 转化策略模式</a></li><li class="chapter-item expanded "><a href="axioms_and_computation.html"><strong aria-hidden="true">12.</strong> 公理和计算</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Theorem Proving in Lean 4</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/RexWzh/theorem_proving_in_lean4" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="命题和证明"><a class="header" href="#命题和证明">命题和证明</a></h1>
+<p>到目前为止，您已经了解了在Lean中定义对象和函数的一些方法。在本章中，我们将开始解释如何使用依赖类型理论的语言编写数学断言和证明。</p>
+<h2 id="命题作为类型"><a class="header" href="#命题作为类型">命题作为类型</a></h2>
+<p>在依赖类型理论的语言中证明关于对象的断言的一种策略是在定义语言之上叠加一个断言语言和一个证明语言。但是没有理由以这种方式增加语言的数量：依赖类型理论是灵活且表达能力强的，我们没有理由不能在相同的普遍框架中表示命题和证明。</p>
+<p>例如，我们可以引入一个新的类型“Prop”来表示命题，并引入构造函数从其他命题构建新的命题。</p>
+<pre><code class="language-lean"># def Implies (p q : Prop) : Prop := p → q
+#check And     -- Prop → Prop → Prop
+#check Or      -- Prop → Prop → Prop
+#check Not     -- Prop → Prop
+#check Implies -- Prop → Prop → Prop
+
+variable (p q r : Prop)
+#check And p q                      -- Prop
+#check Or (And p q) r               -- Prop
+#check Implies (And p q) (And q p)  -- Prop
+</code></pre>
+<p>然后我们可以为每个元素<code>p: Prop</code>引入另一个类型<code>Proof p</code>，表示<code>p</code>的证明类型。&quot;公理&quot;将是这种类型的一个常量。</p>
+<pre><code class="language-lean"># def Implies (p q : Prop) : Prop := p → q
+# structure Proof (p : Prop) : Type where
+#   proof : p
+#check Proof   -- Proof : Prop → Type
+
+axiom and_comm (p q : Prop) : Proof (Implies (And p q) (And q p))
+
+variable (p q : Prop)
+#check and_comm p q     -- Proof (Implies (And p q) (And q p))
+</code></pre>
+<p>除了公理，我们还需要规则来从旧证明中构建新证明。例如，在许多命题逻辑的证明系统中，我们有演绎法则：</p>
+<blockquote>
+<p>从证明&quot;蕴含 p q&quot;和证明&quot;p&quot;，我们获得证明&quot;q&quot;。</p>
+</blockquote>
+<p>我们可以表示如下：</p>
+<pre><code class="language-lean"># def Implies (p q : Prop) : Prop := p → q
+# structure Proof (p : Prop) : Type where
+#   proof : p
+axiom modus_ponens : (p q : Prop) → Proof (Implies p q) → Proof p → Proof q
+</code></pre>
+<p>对于命题逻辑的自然推理系统，通常还依赖于以下规则：</p>
+<blockquote>
+<p>假设我们有一个假设为 <code>p</code> 的证明，那么我们可以“取消”这个假设并得到一个 <code>Implies p q</code> 的证明。</p>
+</blockquote>
+<pre><code class="language-lean"># def Implies (p q : Prop) : Prop := p → q
+# structure Proof (p : Prop) : Type where
+#   proof : p
+axiom implies_intro : (p q : Prop) → (Proof p → Proof q) → Proof (Implies p q)
+</code></pre>
+<p>这种方法将为我们提供一个合理的建立断言和证明的方式。确定表达式 &quot;t&quot; 是断言 &quot;p&quot; 的正确证明，只是简单地检查 &quot;t&quot; 是否具有类型 &quot;Proof p&quot;。</p>
+<p>然而，我们可以进行一些简化。首先，我们可以通过将 &quot;Proof p&quot; 与 &quot;p&quot; 本身混淆来避免重复写入术语 &quot;Proof&quot;。换句话说，每当我们有 &quot;p：Prop&quot; 时，我们可以将 &quot;p&quot; 解释为一个类型，即其证明的类型。然后，我们可以将 &quot;t：p&quot; 读作 &quot;t&quot; 是 &quot;p&quot; 的证明的断言。</p>
+<p>此外，一旦我们进行了这种识别，含蓄规则表明我们可以在 &quot;Implies p q&quot; 和 &quot;p → q&quot; 之间来回传递。换句话说，命题 &quot;p&quot; 和 &quot;q&quot; 之间的蕴含对应于具有将 &quot;p&quot; 的任何元素映射到 &quot;q&quot; 的元素的函数。因此，引入连词 &quot;Implies&quot; 是完全冗余的：我们可以使用依赖类型理论中的通常函数空间构造器 &quot;p → q&quot; 作为蕴涵的概念。</p>
+<p>这是&quot;构造演算&quot;和&quot;依赖类型理论&quot;中遵循的方法，因此也是Lean中遵循的方法。证明系统中蕴含的规则完全对应于函数的抽象和应用的规则，这是 <em>Curry-Howard 同构</em>（有时被称为 <em>命题即类型</em> 范式）的一个实例。实际上，类型 &quot;Prop&quot; 是 &quot;Sort 0&quot; 的语法糖，表示类型层次结构中的最底层，如上一章所述。此外，&quot;Type u&quot; 也只是 &quot;Sort (u+1)&quot; 的语法糖。&quot;Prop&quot; 具有一些特殊功能，但与其他类型宇宙一样，它在箭头构造器下是封闭的：如果我们有 &quot;p q: Prop&quot;，那么 &quot;p → q: Prop&quot;。</p>
+<p>有至少两种将命题看作类型的方式。对于那些对逻辑和数学持建设性观点的人来说，这是对 &quot;p&quot; 作为命题所代表的内容的忠实呈现：命题 &quot;p&quot; 表示一种数据类型，即一种结构。
+构成证明的数据类型规范。那么，<code>p</code>的证明简单地说就是一个正确类型的对象<code>t：p</code>。
+对于不倾向于这种意识形态的人来说，可以将其视为一种简单的编码技巧。对于每个命题<code>p</code>，我们关联一个类型，如果<code>p</code>为假，则该类型为空，如果<code>p</code>为真，则该类型有一个元素，比如<code>*</code>。在后一种情况下，我们可以说（与之关联的）<code>p</code>是“被赋值的”。恰好这种类型与函数应用和抽象的规则相吻合，方便我们跟踪“Prop”中的哪些元素是被赋值的。因此，构建一个元素<code>t：p</code>告诉我们，<code>p</code>的确是真的。你可以把<code>p</code>的元素想象成“<code>p</code>为真的事实”。<code>p→q</code>的证明使用“<code>p</code>为真的事实”来得出“<code>q</code>为真的事实”。</p>
+<p>实际上，如果<code>p：Prop</code>是任何命题，Lean核心将任意两个元素<code>t1 t2：p</code>视为定义上相等，就像它将<code>（fun x =&gt; t）s</code>和<code>t[s/x]</code>视为定义上相等一样。这被称为<em>proof irrelevance</em>，与上段的解释一致。这意味着尽管我们可以将<code>t：p</code>的证明视为依赖类型理论语言中的普通对象，但它们除了<code>p</code>为真这个事实之外没有任何信息。</p>
+<p>我们建议的两种思考命题即类型范式的方式在根本上有所不同。从建设性的角度来看，证明是一种抽象的数学对象，由依赖类型理论中的合适表达式来“表示”。相反，如果我们根据上述描述的编码技巧来思考，那么表达式本身并没有表示任何有趣的东西。相反，我们能够书写并检查它们是否具有良好类型的事实来确保所讨论的命题为真。换句话说，表达式本身就是证明。</p>
+<p>在下面的阐述中，我们将在这两种说法之间来回切换，有时会说一个表达式“构造”或
+&quot;产生&quot;或&quot;返回&quot;一个命题的证明，有时候只是说它&quot;是&quot;这样的一个证明。这类似于计算机科学家有时混淆语法和语义之间的区别，他们有时会说一个程序&quot;计算&quot;某个函数，有时又会说程序&quot;是&quot;该函数。</p>
+<p>不管怎样，真正重要的是最终结果。为了在依赖类型理论的语言中形式化地表达一个数学断言，我们需要展示一个<code>p : Prop</code>的术语。为了<em>证明</em>这个断言，我们需要展示一个<code>t: p</code>的术语。作为一个证明助手，Lean的任务是帮助我们构造这样的术语<code>t</code>，并验证它的正确性和类型是否正确。</p>
+<h2 id="以类型为命题的方式处理命题"><a class="header" href="#以类型为命题的方式处理命题">以类型为命题的方式处理命题</a></h2>
+<p>在以类型为命题的范式中，只涉及<code>→</code>的定理可以使用lambda抽象和应用来证明。在Lean中，<code>theorem</code>命令引入一个新的定理：</p>
+<pre><code class="language-lean">variable {p : Prop}
+variable {q : Prop}
+
+theorem t1 : p → q → p := fun hp : p =&gt; fun hq : q =&gt; hp
+</code></pre>
+<p>将这个证明与类型为<code>α → β → α</code>的表达式<code>fun x:α =&gt; fun y:β =&gt; x</code>进行比较，其中<code>α</code>和<code>β</code>是数据类型。
+这描述了一个函数，它接受类型为<code>α</code>和<code>β</code>的参数<code>x</code>和<code>y</code>，然后返回<code>x</code>。
+<code>t1</code>的证明具有相同的形式，唯一不同之处在于<code>p</code>和<code>q</code>是<code>Prop</code>而不是<code>Type</code>的元素。
+直观地说，我们对<code>p → q → p</code>的证明假设<code>p</code>和<code>q</code>为真，并使用第一个假设（平凡地）来证明结论<code>p</code>为真。</p>
+<p>请注意，<code>theorem</code>命令实际上是<code>def</code>命令的一个版本：在命题和类型的对应关系下，证明<code>p → q → p</code>实际上就是定义相关类型的元素。对于核心类型检查器来说，这两者之间没有区别。</p>
+<p>然而，定义和定理之间存在一些实际上的差异。在正常情况下，从来不需要展开定理的“定义”；根据证明不可区分性，该定理的任意两个证明在定义上是相等的。一旦定理的证明完成，通常我们只需要知道该证明存在；无关乎证明是什么。基于这个事实，Lean将证明标记为<em>不可约</em>，这是对解析器（更准确地说是对<em>编译器</em>）的一种提示，即在处理文件时通常不需要展开它。实际上，由于评估一个证明的正确性不需要了解另一个证明的细节，Lean通常能够并行处理和检查证明。</p>
+<p>与定义一样，<code>#print</code>命令将显示您的证明。</p>
+<pre><code class="language-lean"># variable {p : Prop}
+# variable {q : Prop}
+theorem t1 : p → q → p := fun hp : p =&gt; fun hq : q =&gt; hp
+
+#print t1
+</code></pre>
+<p>注意，lambda抽象“hp: p”和“hq: q”可以被视为在证明“t1”时的临时假设。Lean还允许我们使用“show”语句明确指定最终项“hp”的类型。</p>
+<pre><code class="language-lean"># variable {p : Prop}
+# variable {q : Prop}
+theorem t1 : p → q → p :=
+  fun hp : p =&gt;
+  fun hq : q =&gt;
+  show p from hp
+</code></pre>
+<p>添加这样的额外信息可以提高证明的清晰度，帮助在书写证明时检测错误。<code>show</code>命令除了注释类型外，内部还有所有我们见过的<code>t1</code>的表示产生相同的术语。</p>
+<p>和普通定义一样，我们可以将抽象的变量移到冒号的左边：</p>
+<pre><code class="language-lean"># variable {p : Prop}
+# variable {q : Prop}
+theorem t1 (hp : p) (hq : q) : p := hp
+
+#print t1    -- p → q → p
+</code></pre>
+<p>现在我们可以将定理“t1”视为函数应用。</p>
+<pre><code class="language-lean"># variable {p : Prop}
+# variable {q : Prop}
+theorem t1 (hp : p) (hq : q) : p := hp
+
+axiom hp : p
+
+theorem t2 : q → p := t1 hp
+</code></pre>
+<p>在这里，“axiom”声明假设存在给定类型的元素，并可能妥协逻辑一致性。例如，我们可以用它假设空类型 <code>False</code> 有一个元素。</p>
+<pre><code class="language-lean">axiom unsound : False
+-- Everything follows from false
+theorem ex : 1 = 0 :=
+  False.elim unsound
+</code></pre>
+<p>声明公理“hp : p”等同于声明“p”是真的，并由“hp”证实。将定理“t1 : p → q → p”应用于事实“hp : p”即“p”是真的，可以得到定理“t1 hp : q → p”。</p>
+<p>回顾一下，我们也可以将定理“t1”写为以下形式：</p>
+<pre><code class="language-lean">theorem t1 {p q : Prop} (hp : p) (hq : q) : p := hp
+
+#print t1
+</code></pre>
+<p><code>t1</code> 的类型现在是 <code>∀ {p q : Prop}, p → q → p</code>。我们可以理解为断言：“对于每一对命题 <code>p q</code>，我们有 <code>p → q → p</code>。” 例如，我们可以将所有参数移到冒号的右边：</p>
+<pre><code class="language-lean">theorem t1 : ∀ {p q : Prop}, p → q → p :=
+  fun {p q : Prop} (hp : p) (hq : q) =&gt; hp
+</code></pre>
+<p>如果<code>p</code>和<code>q</code>已被声明为变量，Lean会自动为我们进行泛化处理：</p>
+<pre><code class="language-lean">variable {p q : Prop}
+
+theorem t1 : p → q → p := fun (hp : p) (hq : q) =&gt; hp
+</code></pre>
+<p>实际上，通过命题即类型对应，我们可以将“p”成立的假设“hp”声明为另一个变量：</p>
+<pre><code class="language-lean">variable {p q : Prop}
+variable (hp : p)
+
+theorem t1 : q → p := fun (hq : q) =&gt; hp
+</code></pre>
+<p>Lean检测到证明使用了&quot;hq&quot;并自动添加&quot;hp : p&quot;作为前提条件。在所有情况下，命令“#print t1”仍然产生“∀ p q : Prop, p → q → p”。请记住，这种类型也可以写作&quot;∀ (p q : Prop) (hp : p) (hq : q), p&quot;，因为箭头只表示目标不依赖于绑定变量的箭头类型。</p>
+<p>当我们以这种方式推广&quot;t1&quot;时，我们可以将它应用于不同的命题对，以得到常规定理的不同实例。</p>
+<pre><code class="language-lean">theorem t1 (p q : Prop) (hp : p) (hq : q) : p := hp
+
+variable (p q r s : Prop)
+
+#check t1 p q                -- p → q → p
+#check t1 r s                -- r → s → r
+#check t1 (r → s) (s → r)    -- (r → s) → (s → r) → r → s
+
+variable (h : r → s)
+#check t1 (r → s) (s → r) h  -- (s → r) → r → s
+</code></pre>
+<p>再次，利用命题与类型对应的关系，类型为<code>r → s</code>的变量<code>h</code>可视为假设或前提，即<code>r → s</code>成立的假设。</p>
+<p>以另一个示例为例，让我们考虑上一章中讨论的复合函数，现在使用命题而不是类型。</p>
+<pre><code class="language-lean">variable (p q r s : Prop)
+
+theorem t2 (h₁ : q → r) (h₂ : p → q) : p → r :=
+  fun h₃ : p =&gt;
+  show r from h₁ (h₂ h₃)
+</code></pre>
+<p>作为命题逻辑的定理，<code>t2</code>是什么意思？</p>
+<p>请注意，使用数值Unicode下标作为假设经常非常有用，可以输入为<code>\0</code>、<code>\1</code>、<code>\2</code>、...，就像我们在这个示例中所做的一样。</p>
+<h2 id="命题逻辑"><a class="header" href="#命题逻辑">命题逻辑</a></h2>
+<p>Lean定义了所有标准的逻辑连接词和符号。命题连接词使用以下符号表示：</p>
+<div class="table-wrapper"><table><thead><tr><th>Ascii</th><th>Unicode</th><th>编辑器快捷键</th><th>定义</th></tr></thead><tbody>
+<tr><td>True</td><td></td><td></td><td>True</td></tr>
+<tr><td>False</td><td></td><td></td><td>False</td></tr>
+<tr><td>Not</td><td>¬</td><td><code>\not</code>, <code>\neg</code></td><td>Not</td></tr>
+<tr><td>/\</td><td>∧</td><td><code>\and</code></td><td>And</td></tr>
+<tr><td>\/</td><td>∨</td><td><code>\or</code></td><td>Or</td></tr>
+<tr><td>-&gt;</td><td>→</td><td><code>\to</code>, <code>\r</code>, <code>\imp</code></td><td></td></tr>
+<tr><td>&lt;-&gt;</td><td>↔</td><td><code>\iff</code>, <code>\lr</code></td><td>Iff</td></tr>
+</tbody></table>
+</div>
+<p>它们都取值为<code>Prop</code>。</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+#check p → q → p ∧ q
+#check ¬p → p ↔ False
+#check p ∨ q → q ∨ p
+</code></pre>
+<p>运算顺序如下：一元否定 <code>¬</code> 最强，然后是 <code>∧</code>，然后是 <code>∨</code>，然后是 <code>→</code>，最后是 <code>↔</code>。例如，<code>a ∧ b → c ∨ d ∧ e</code> 的意思是 <code>(a ∧ b) → (c ∨ (d ∧ e))</code>。请记住，<code>→</code> 是从右向左结合的（精确来说，现在的参数是 <code>Prop</code> 类型，而不是其他类型），其他二元连结词也是如此。因此，如果我们有 <code>p q r : Prop</code>，表达式 <code>p → q → r</code> 表示 &quot;如果 <code>p</code>，那么如果 <code>q</code>，就 <code>r</code>。&quot; 这只是 <code>p ∧ q → r</code> 的 &quot;柯里化&quot; 形式。</p>
+<p>在上一章中，我们观察到 lambda 抽象可以被视为 <code>→</code> 的 &quot;引入规则&quot;。在当前设置中，它展示了如何 &quot;引入&quot; 或建立一个蕴涵。应用可以被视为一种 &quot;消去规则&quot;，展示了如何在证明中 &quot;消去&quot; 或使用一个蕴涵。其他命题连结词在 Lean 的库文件 <code>Prelude.core</code> 中定义（有关库层次结构的更多信息，请参见 <a href="./interacting_with_lean.html#importing-files">importing files</a>），每个连结词都带有其规范的引入和消去规则。</p>
+<h3 id="合取conjunction"><a class="header" href="#合取conjunction">合取（conjunction）</a></h3>
+<p>表达式 <code>And.intro h1 h2</code> 使用证明 <code>h1 : p</code> 和 <code>h2 : q</code> 构建了一个 <code>p ∧ q</code> 的证明。通常将 <code>And.intro</code> 称为 <em>合取引入</em> 规则。在下一个示例中，我们使用 <code>And.intro</code> 创建了一个 <code>p → q → p ∧ q</code> 的证明。</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (hp : p) (hq : q) : p ∧ q := And.intro hp hq
+
+#check fun (hp : p) (hq : q) =&gt; And.intro hp hq
+</code></pre>
+<p><code>example</code>命令陈述了一个定理，但没有为它命名或将其存储在永久上下文中。实质上，它只是检查给定的项是否具有指定的类型。它非常方便用于说明，并且我们经常会使用它。</p>
+<p>表达式<code>And.left h</code>从证明<code>h : p ∧ q</code>中创建了一个关于“p”的证明。同样，<code>And.right h</code>是一个关于“q”的证明。它们通常称为左和右的<em>and-消除</em>规则。</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (h : p ∧ q) : p := And.left h
+example (h : p ∧ q) : q := And.right h
+</code></pre>
+<p>我们现在可以使用以下证明项证明“p ∧ q → q ∧ p”。</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (h : p ∧ q) : q ∧ p :=
+  And.intro (And.right h) (And.left h)
+</code></pre>
+<p>注意，安德引入和安德消除类似于笛卡尔乘积的配对和投影操作。不同之处在于给定<code>hp：p</code>和<code>hq：q</code>，<code>And.intro hp hq</code>的类型是<code>p ∧ q：Prop</code>，而<code>Prod hp hq</code>的类型是<code>p × q：Type</code>。<code>∧</code>和<code>×</code>之间的类似性是另一个Curry-Howard同构的例子，但与蕴含和函数空间构造器不同的是，<code>∧</code>和<code>×</code>在Lean中是分开处理的。然而，通过这个类比，我们刚刚构建的证明类似于将一对元素交换的函数。</p>
+<p>我们将在<a href="./structures_and_records.html">结构和记录章节</a>中看到，在Lean中，某些类型是<em>结构</em>，这意味着该类型是用单个规范的<em>构造器</em>定义的，该构造器从一系列合适的参数构建类型的元素。对于每个<code>p q：Prop</code>，<code>p ∧ q</code>就是一个例子：构建元素的规范方法是将适当的参数<code>hp：p</code>和<code>hq：q</code>应用到<code>And.intro</code>中。Lean允许我们在这种情况下使用<em>匿名构造器</em>表示法<code>⟨arg1, arg2, ...⟩</code>，当相关类型是归纳类型并且可以从上下文中推断出时。特别地，我们可以经常写成<code>⟨hp, hq⟩</code>而不是<code>And.intro hp hq</code>：</p>
+<pre><code class="language-lean">variable (p q : Prop)
+variable (hp : p) (hq : q)
+
+#check (⟨hp, hq⟩ : p ∧ q)
+</code></pre>
+<p>这些尖括号可以通过键入<code>\&lt;</code>和<code>\&gt;</code>来获得。</p>
+<p>Lean还提供了另一个有用的语法工具。给定一个表达式<code>e</code>，它的归纳类型是<code>Foo</code>（可能应用了一些参数），记号<code>e.bar</code>是<code>Foo.bar e</code>的简写。这提供了一种方便的方式来访问函数而不需要打开命名空间。例如，以下两个表达式表示相同的意思：</p>
+<pre><code class="language-lean">variable (xs : List Nat)
+
+#check List.length xs
+#check xs.length
+</code></pre>
+<p>因此，鉴于“h：p ∧ q”，我们可以用“h.left”表示“And.left h”，用“h.right”表示“And.right h”。因此，我们可以方便地将上述示例证明重写为：</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (h : p ∧ q) : q ∧ p :=
+  ⟨h.right, h.left⟩
+</code></pre>
+<p>简洁和混淆之间有一条微妙的界线，以这种方式省略信息有时会使证明更难阅读。但对于像上面那样的直接构造，当“h”的类型和构造的目标明显时，这种表示法是简洁而有效的。</p>
+<p>在 Lean 中，常见的迭代构造方式是 “And”。Lean 还允许将右结合的嵌套构造方式展平，所以这两个证明是等效的：</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (h : p ∧ q) : q ∧ p ∧ q :=
+  ⟨h.right, ⟨h.left, h.right⟩⟩
+
+example (h : p ∧ q) : q ∧ p ∧ q :=
+  ⟨h.right, h.left, h.right⟩
+</code></pre>
+<p>这也常常很有用。</p>
+<h3 id="析取"><a class="header" href="#析取">析取</a></h3>
+<p>表达式<code>Or.intro_left q hp</code>根据证明<code>hp : p</code>创建了一个<code>p ∨ q</code>的证明。类似地，<code>Or.intro_right p hq</code>使用证明<code>hq : q</code>创建了一个<code>p ∨ q</code>的证明。这些是左右<em>析取引入</em>规则。</p>
+<pre><code class="language-lean">variable (p q : Prop)
+example (hp : p) : p ∨ q := Or.intro_left q hp
+example (hq : q) : p ∨ q := Or.intro_right p hq
+</code></pre>
+<p>*or-elimination（或消去）*规则稍微复杂一些。其思路是我们可以从<code>p ∨ q</code>证明出<code>r</code>，通过展示<code>r</code>从<code>p</code>和<code>r</code>从<code>q</code>都可以得到。换句话说，这是一种根据情况证明的方式。在表达式<code>Or.elim hpq hpr hqr</code>中，<code>Or.elim</code>接受三个参数，<code>hpq : p ∨ q</code>，<code>hpr : p → r</code> 和 <code>hqr : q → r</code>，然后得到<code>r</code>的证明。在下面的例子中，我们使用<code>Or.elim</code>来证明<code>p ∨ q → q ∨ p</code>。</p>
+<pre><code class="language-lean">variable (p q r : Prop)
+
+example (h : p ∨ q) : q ∨ p :=
+  Or.elim h
+    (fun hp : p =&gt;
+      show q ∨ p from Or.intro_right q hp)
+    (fun hq : q =&gt;
+      show q ∨ p from Or.intro_left p hq)
+</code></pre>
+<p>在大多数情况下，Lean可以自动推断出<code>Or.intro_right</code>和<code>Or.intro_left</code>的第一个参数。因此，Lean提供了<code>Or.inr</code>和<code>Or.inl</code>，可以看作是<code>Or.intro_right _</code>和<code>Or.intro_left _</code>的简写形式。因此，上述证明项可以更简洁地编写为：</p>
+<pre><code class="language-lean">variable (p q r : Prop)
+
+example (h : p ∨ q) : q ∨ p :=
+  Or.elim h (fun hp =&gt; Or.inr hp) (fun hq =&gt; Or.inl hq)
+</code></pre>
+<p>请注意，完整表达式中有足够的信息供Lean推断<code>hp</code>和<code>hq</code>的类型。但是，使用更长版本中的类型注释可以使证明更可读，并且可以帮助捕捉和调试错误。</p>
+<p>由于<code>Or</code>有两个构造函数，我们无法使用匿名构造函数表示法。但是我们仍然可以写<code>h.elim</code>而不是<code>Or.elim h</code>：</p>
+<pre><code class="language-lean">variable (p q r : Prop)
+
+example (h : p ∨ q) : q ∨ p :=
+  h.elim (fun hp =&gt; Or.inr hp) (fun hq =&gt; Or.inl hq)
+</code></pre>
+<p>再次，你应该行使判断力来确定这些缩写符是否增强或减弱了可读性。</p>
+<h3 id="否定和谬误"><a class="header" href="#否定和谬误">否定和谬误</a></h3>
+<p>否定，<code>¬p</code>，实际上被定义为 <code>p → False</code>，因此我们可以通过从 <code>p</code> 推导出一个矛盾来获得 <code>¬p</code>。类似地，表达式 <code>hnp hp</code> 从 <code>hp : p</code> 和 <code>hnp : ¬p</code> 中产生了一个 <code>False</code> 的证明。下一个例子使用了这两条规则来产生一个 <code>(p → q) → ¬q → ¬p</code> 的证明。（符号 <code>¬</code> 通过输入 <code>\not</code> 或者 <code>\neg</code> 获取。）</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (hpq : p → q) (hnq : ¬q) : ¬p :=
+  fun hp : p =&gt;
+  show False from hnq (hpq hp)
+</code></pre>
+<p>逻辑连词<code>False</code>具有一个单一的消解规则，<code>False.elim</code>，它表达了任何事物都可以从矛盾中推导出来的事实。有时将此规则称为<em>ex falso</em>（<em>ex falso sequitur quodlibet</em>的缩写）或者<em>爆炸原理</em>。</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (hp : p) (hnp : ¬p) : q := False.elim (hnp hp)
+</code></pre>
+<p><code>absurd</code>是从矛盾的假设中推导出任意事实的模式，被应用在<code>False.elim</code>这个函数中，并且会自动推断出这个任意事实<code>q</code>。这种模式是相当常见的。</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (hp : p) (hnp : ¬p) : q := absurd hp hnp
+</code></pre>
+<p>以下是<code>¬p → q → (q → p) → r</code>的一个证明示例：</p>
+<p>首先，我们假设<code>¬p</code>为真（设置前提）。</p>
+<p>接下来，我们假设<code>q</code>也为真（设置前提）。</p>
+<p>然后，假设<code>q → p</code>为真（设置前提）。</p>
+<p>根据前提<code>¬p</code>和设置的<code>q → p</code>，我们可以得出<code>p</code>为假（通过逻辑推理）。</p>
+<p>再根据前提<code>q</code>和得出的<code>p</code>为假，我们可以得出<code>q → p</code>为假（通过逻辑推理）。</p>
+<p>根据前提<code>q → p</code>为假和设置的<code>q → p</code>，我们可以得出<code>¬q</code>为真（通过逻辑推理）。</p>
+<p>最后，根据前提<code>¬q</code>和设置的<code>¬p</code>，我们可以得出<code>r</code>为真（通过逻辑推理）。</p>
+<p>因此，我们可以得出结论：<code>¬p → q → (q → p) → r</code>为真。</p>
+<pre><code class="language-lean">variable (p q r : Prop)
+
+example (hnp : ¬p) (hq : q) (hqp : q → p) : r :=
+  absurd (hqp hq) hnp
+</code></pre>
+<p>顺便说一下，就像<code>False</code>只有一个消除规则一样，<code>True</code>只有一个引入规则，即<code>True.intro : true</code>。换句话说，<code>True</code>就是真，它有一个规范的证明，即<code>True.intro</code>。</p>
+<h3 id="逻辑等价"><a class="header" href="#逻辑等价">逻辑等价</a></h3>
+<p>表达式<code>Iff.intro h1 h2</code>从<code>h1 : p → q</code>和<code>h2 : q → p</code>中产生了<code>p ↔ q</code>的证明。表达式<code>Iff.mp h</code>从<code>h : p ↔ q</code>中产生了<code>p → q</code>的证明。类似地，<code>Iff.mpr h</code>从<code>h : p ↔ q</code>中产生了<code>q → p</code>的证明。这是一个<code>p ∧ q ↔ q ∧ p</code>的证明：</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+theorem and_swap : p ∧ q ↔ q ∧ p :=
+  Iff.intro
+    (fun h : p ∧ q =&gt;
+     show q ∧ p from And.intro (And.right h) (And.left h))
+    (fun h : q ∧ p =&gt;
+     show p ∧ q from And.intro (And.right h) (And.left h))
+
+#check and_swap p q    -- p ∧ q ↔ q ∧ p
+
+variable (h : p ∧ q)
+example : q ∧ p := Iff.mp (and_swap p q) h
+</code></pre>
+<p>我们可以使用匿名构造函数表示法从前向和后向的证明来构造<code>p ↔ q</code>的证明，还可以使用<code>.</code>表示法与<code>mp</code>和<code>mpr</code>。因此，前面的示例可以简洁地写成如下形式：</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+theorem and_swap : p ∧ q ↔ q ∧ p :=
+  ⟨ fun h =&gt; ⟨h.right, h.left⟩, fun h =&gt; ⟨h.right, h.left⟩ ⟩
+
+example (h : p ∧ q) : q ∧ p := (and_swap p q).mp h
+</code></pre>
+<h2 id="介绍辅助子目标"><a class="header" href="#介绍辅助子目标">介绍辅助子目标</a></h2>
+<p>这是一个介绍Lean提供的帮助组织长证明的另一种方法的好地方，即“have”结构，在证明中引入了一个辅助子目标。这里有一个小例子，根据上一节进行了调整：</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (h : p ∧ q) : q ∧ p :=
+  have hp : p := h.left
+  have hq : q := h.right
+  show q ∧ p from And.intro hq hp
+</code></pre>
+<p>内部表达式<code>have h : p := s; t</code>会生成<code>(fun (h : p) =&gt; t) s</code>。换句话说，<code>s</code>是<code>p</code>的证明，<code>t</code>是在假设<code>h : p</code>下所需结论的证明，并且通过lambda抽象和应用将两者组合在一起。这个简单的方法在构建长证明时非常有用，因为我们可以使用中间的<code>have</code>作为通往最终目标的跳板。</p>
+<p>Lean还支持一种从目标向后推理的结构化方法，这种方法模拟了普通数学中的“足够展示”构造。下一个例子只是对之前证明中的最后两行进行了排列。</p>
+<pre><code class="language-lean">variable (p q : Prop)
+
+example (h : p ∧ q) : q ∧ p :=
+  have hp : p := h.left
+  suffices hq : q from And.intro hq hp
+  show q from And.right h
+</code></pre>
+<p>写<code> suffices hq: q</code> 可以让我们达到两个目标。首先，我们必须证明确实只需证明<code>q</code>，通过证明带有额外假设<code>hq：q</code> 的原始目标<code>q ∧ p</code>。最后，我们必须证明<code>q</code>。</p>
+<h2 id="经典逻辑"><a class="header" href="#经典逻辑">经典逻辑</a></h2>
+<p>到目前为止，我们所看到的引入和消除规则都是建设性的，也就是说，它们反映了基于命题即类型对应的逻辑连词的计算理解。普通的经典逻辑在此基础上添加了排中律，<code>p ∨ ¬p</code>。要使用这个原则，你必须打开经典命名空间。</p>
+<pre><code class="language-lean">open Classical
+
+variable (p : Prop)
+#check em p
+</code></pre>
+<p>直观上，构造性的“或”非常强大：断言“p ∨ q”等同于知道哪种情况成立。如果“RH”代表黎曼猜想(Riemann hypothesis)，一个经典的数学家愿意断言“RH ∨ ¬RH”，即使我们还不能断言任何一个分离部分。</p>
+<p>排中律的一个结果是双重否定消除原则：</p>
+<pre><code class="language-lean">open Classical
+
+theorem dne {p : Prop} (h : ¬¬p) : p :=
+  Or.elim (em p)
+    (fun hp : p =&gt; hp)
+    (fun hnp : ¬p =&gt; absurd hnp h)
+</code></pre>
+<p>双重否定消除允许我们证明任何命题“p”，通过假设“¬p”并推导出“false”，因为这等同于证明“¬¬p”。换句话说，双重否定消除允许我们进行一个证明通过矛盾，这在建构性逻辑中通常是不可能的。作为一个练习，你可以尝试证明逆命题，即从“dne”证明“em”是可以的。</p>
+<p>经典公理还给你提供了通过使用“em”的辅助证明的其他模式。例如，我们可以通过分情况进行证明：</p>
+<pre><code class="language-lean">open Classical
+variable (p : Prop)
+
+example (h : ¬¬p) : p :=
+  byCases
+    (fun h1 : p =&gt; h1)
+    (fun h1 : ¬p =&gt; absurd h1 h)
+</code></pre>
+<p>或者你可以采用反证法来进行证明：</p>
+<pre><code class="language-lean">open Classical
+variable (p : Prop)
+
+example (h : ¬¬p) : p :=
+  byContradiction
+    (fun h1 : ¬p =&gt;
+     show False from h h1)
+</code></pre>
+<p>如果你不习惯进行建设性思维，可能需要一些时间才能意识到在哪些情况下使用了经典推理。在以下示例中需要使用经典推理，因为从建设性的观点来看，知道“p”和“q”不同时真实并不能告诉你哪一个是假的：</p>
+<pre><code class="language-lean"># open Classical
+# variable (p q : Prop)
+example (h : ¬(p ∧ q)) : ¬p ∨ ¬q :=
+  Or.elim (em p)
+    (fun hp : p =&gt;
+      Or.inr
+        (show ¬q from
+          fun hq : q =&gt;
+          h ⟨hp, hq⟩))
+    (fun hp : ¬p =&gt;
+      Or.inl hp)
+</code></pre>
+<p>我们稍后将会看到，在建设性逻辑中确实存在一些情况下，排中律和双重否定消除等原则是可以使用的，并且Lean支持在这样的上下文中使用经典推理而不依赖于排中律。</p>
+<p>在Lean中用于支持经典推理的完整公理列表在《公理与计算》中进行了讨论。</p>
+<h2 id="命题有效性的示例"><a class="header" href="#命题有效性的示例">命题有效性的示例</a></h2>
+<p>Lean的标准库中包含了许多命题逻辑的有效陈述的证明，您可以自由地在您自己的证明中使用它们。下面的列表包括了一些常见的等式。</p>
+<p>交换律：</p>
+<ol>
+<li><code>p ∧ q ↔ q ∧ p</code></li>
+<li><code>p ∨ q ↔ q ∨ p</code></li>
+</ol>
+<p>结合律：</p>
+<ol start="3">
+<li><code>(p ∧ q) ∧ r ↔ p ∧ (q ∧ r)</code></li>
+<li><code>(p ∨ q) ∨ r ↔ p ∨ (q ∨ r)</code></li>
+</ol>
+<p>分配律：</p>
+<ol start="5">
+<li><code>p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r)</code></li>
+<li><code>p ∨ (q ∧ r) ↔ (p ∨ q) ∧ (p ∨ r)</code></li>
+</ol>
+<p>其他属性：</p>
+<ol start="7">
+<li><code>(p → (q → r)) ↔ (p ∧ q → r)</code></li>
+<li><code>((p ∨ q) → r) ↔ (p → r) ∧ (q → r)</code></li>
+<li><code>¬(p ∨ q) ↔ ¬p ∧ ¬q</code></li>
+<li><code>¬p ∨ ¬q → ¬(p ∧ q)</code></li>
+<li><code>¬(p ∧ ¬p)</code></li>
+<li><code>p ∧ ¬q → ¬(p → q)</code></li>
+<li><code>¬p → (p → q)</code></li>
+<li><code>(¬p ∨ q) → (p → q)</code></li>
+<li><code>p ∨ False ↔ p</code></li>
+<li><code>p ∧ False ↔ False</code></li>
+<li><code>¬(p ↔ ¬p)</code></li>
+<li><code>(p → q) → (¬q → ¬p)</code></li>
+</ol>
+<p>以下需要经典推理：</p>
+<ol start="19">
+<li>
+<p><code>(p → r ∨ s) → ((p → r) ∨ (p → s))</code></p>
+</li>
+<li>
+<p><code>¬(p ∧ q) → ¬p ∨ ¬q</code></p>
+</li>
+<li>
+<p><code>¬(p → q) → p ∧ ¬q</code></p>
+</li>
+<li>
+<p><code>(p → q) → (¬p ∨ q)</code></p>
+</li>
+<li>
+<p><code>(p → q) → (¬p ∨ q)</code></p>
+</li>
+<li>
+<p><code>(¬q → ¬p) → (p → q)</code></p>
+</li>
+<li>
+<p><code>(¬q → ¬p) → (p → q)</code></p>
+</li>
+<li>
+<p><code>p ∨ ¬p</code></p>
+</li>
+<li>
+<p><code>p ∨ ¬p</code></p>
+</li>
+<li>
+<p><code>(((p → q) → p) → p)</code></p>
+</li>
+<li>
+<p><code>(((p → q) → p) → p)</code></p>
+</li>
+</ol>
+<p><code>sorry</code> 不知何故可以生成任何结论的证明，或提供任何数据类型的对象。当然，这种证明方法是不可行的——例如，你可以用它证明<code>False</code>——当使用或导入依赖于<code>sorry</code>的定理时，Lean会产生严重的警告。但是，它非常有用于逐步构建较长的证明。从上到下编写证明，使用<code>sorry</code>填充子证明。确保Lean接受带有所有<code>sorry</code>的项；如果不接受，则需要纠正错误。然后，逐个将<code>sorry</code>替换为实际的证明，直到没有剩下为止。</p>
+<p>这里还有另一个有用的技巧。你可以使用下划线<code>_</code>作为占位符，而不是使用<code>sorry</code>。回想一下，这告诉Lean参数是隐式的，并且应该自动填充。如果Lean尝试并失败，它会返回一个错误消息&quot;don't know how to synthesize placeholder&quot;，后跟它期望的项的类型以及上下文中提供的所有对象和假设。换句话说，对于每个未解决的占位符，Lean报告需要在该点填写的子目标。然后，您可以通过逐步填写这些占位符来构造证明。 </p>
+<p>作为参考，这里有两个从上面列表中取出的有效性的示例证明。</p>
+<pre><code class="language-lean">open Classical
+
+-- distributivity
+example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) :=
+  Iff.intro
+    (fun h : p ∧ (q ∨ r) =&gt;
+      have hp : p := h.left
+      Or.elim (h.right)
+        (fun hq : q =&gt;
+          show (p ∧ q) ∨ (p ∧ r) from Or.inl ⟨hp, hq⟩)
+        (fun hr : r =&gt;
+          show (p ∧ q) ∨ (p ∧ r) from Or.inr ⟨hp, hr⟩))
+    (fun h : (p ∧ q) ∨ (p ∧ r) =&gt;
+      Or.elim h
+        (fun hpq : p ∧ q =&gt;
+          have hp : p := hpq.left
+          have hq : q := hpq.right
+          show p ∧ (q ∨ r) from ⟨hp, Or.inl hq⟩)
+        (fun hpr : p ∧ r =&gt;
+          have hp : p := hpr.left
+          have hr : r := hpr.right
+          show p ∧ (q ∨ r) from ⟨hp, Or.inr hr⟩))
+
+-- an example that requires classical reasoning
+example (p q : Prop) : ¬(p ∧ ¬q) → (p → q) :=
+  fun h : ¬(p ∧ ¬q) =&gt;
+  fun hp : p =&gt;
+  show q from
+    Or.elim (em q)
+      (fun hq : q =&gt; hq)
+      (fun hnq : ¬q =&gt; absurd (And.intro hp hnq) h)
+</code></pre>
+<h2 id="练习"><a class="header" href="#练习">练习</a></h2>
+<p>证明下面的恒等式，将“sorry”占位符替换为实际的证明。</p>
+<pre><code class="language-lean">variable (p q r : Prop)
+
+-- commutativity of ∧ and ∨
+example : p ∧ q ↔ q ∧ p := sorry
+example : p ∨ q ↔ q ∨ p := sorry
+
+-- associativity of ∧ and ∨
+example : (p ∧ q) ∧ r ↔ p ∧ (q ∧ r) := sorry
+example : (p ∨ q) ∨ r ↔ p ∨ (q ∨ r) := sorry
+
+-- distributivity
+example : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := sorry
+example : p ∨ (q ∧ r) ↔ (p ∨ q) ∧ (p ∨ r) := sorry
+
+-- other properties
+example : (p → (q → r)) ↔ (p ∧ q → r) := sorry
+example : ((p ∨ q) → r) ↔ (p → r) ∧ (q → r) := sorry
+example : ¬(p ∨ q) ↔ ¬p ∧ ¬q := sorry
+example : ¬p ∨ ¬q → ¬(p ∧ q) := sorry
+example : ¬(p ∧ ¬p) := sorry
+example : p ∧ ¬q → ¬(p → q) := sorry
+example : ¬p → (p → q) := sorry
+example : (¬p ∨ q) → (p → q) := sorry
+example : p ∨ False ↔ p := sorry
+example : p ∧ False ↔ False := sorry
+example : (p → q) → (¬q → ¬p) := sorry
+</code></pre>
+<p>证明以下恒等式，用实际的证明来替换 &quot;sorry&quot; 占位符。这些恒等式需要经典的推理方法。</p>
+<ol>
+<li>恒等式：(a + b = b + a)，对于任意实数 (a) 和 (b) 成立。</li>
+</ol>
+<p>证明：根据实数的加法交换律，我们知道对于任意实数 (a) 和 (b)，有 (a + b = b + a)。因此，恒等式成立。</p>
+<ol start="2">
+<li>恒等式：(a - b = -b + a)，对于任意实数 (a) 和 (b) 成立。</li>
+</ol>
+<p>证明：根据实数的加法逆元定义，我们有 (b + (-b) = 0)。然后，根据实数的加法单位元定义，我们有 (0 + a = a)。结合这两个等式，我们可以得出 (b + (-b) + a = a)。进一步化简，我们可以得出 ((-b) + a = a - b)。因此，恒等式成立。</p>
+<ol start="3">
+<li>恒等式：(a \cdot b = b \cdot a)，对于任意实数 (a) 和 (b) 成立。</li>
+</ol>
+<p>证明：根据实数的乘法交换律，我们知道对于任意实数 (a) 和 (b)，有 (a \cdot b = b \cdot a)。因此，恒等式成立。</p>
+<ol start="4">
+<li>恒等式：(a \div b = \frac{1}{b} \cdot a)，对于任意实数 (a) 和 (b) 成立。</li>
+</ol>
+<p>证明：由于除法可以转换为乘法的倒数运算，我们可以将 (a \div b) 转化为 (a \cdot \frac{1}{b})。根据实数的乘法交换律，我们知道对于任意实数 (a) 和 (b)，有 (a \cdot \frac{1}{b} = \frac{1}{b} \cdot a)。因此，恒等式成立。</p>
+<p>这些证明使用了实数运算的基本性质和定义，因此都是合理的。</p>
+<pre><code class="language-lean">open Classical
+
+variable (p q r : Prop)
+
+example : (p → q ∨ r) → ((p → q) ∨ (p → r)) := sorry
+example : ¬(p ∧ q) → ¬p ∨ ¬q := sorry
+example : ¬(p → q) → p ∧ ¬q := sorry
+example : (p → q) → (¬p ∨ q) := sorry
+example : (¬q → ¬p) → (p → q) := sorry
+example : p ∨ ¬p := sorry
+example : (((p → q) → p) → p) := sorry
+</code></pre>
+<p>证明 <code>¬(p ↔ ¬p)</code> 而不使用经典逻辑。</p>
+<p>让我们使用直觉istic逻辑证明这个表达式。</p>
+<p>假设 <code>p</code>为真，即 p=True。那么根据双向蕴含的定义，<code>p ↔ ¬p</code>表达式得到真值:</p>
+<pre><code>(p ↔ ¬p) 
+≡ (True ↔ ¬True)  
+≡ (True ↔ False)
+≡ False
+</code></pre>
+<p>同样地，如果我们假设 <code>p</code>为假，即 p=False，我们会得到相同的结果:</p>
+<pre><code>(p ↔ ¬p) 
+≡ (False ↔ ¬False)  
+≡ (False ↔ True)
+≡ False
+</code></pre>
+<p>由于<code>p</code>可以取<code>True</code>或<code>False</code>的值，并且<code>p ↔ ¬p</code>的结果总是<code>False</code>，我们可以确定该表达式是真的，即 <code>¬(p ↔ ¬p)</code> 为真。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="dependent_type_theory.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="quantifiers_and_equality.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="dependent_type_theory.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="quantifiers_and_equality.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

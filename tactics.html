@@ -1,0 +1,1369 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>策略 - Theorem Proving in Lean 4</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="title_page.html">Lean 4中的定理证明</a></li><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> 引言</a></li><li class="chapter-item expanded "><a href="dependent_type_theory.html"><strong aria-hidden="true">2.</strong> 依赖类型论</a></li><li class="chapter-item expanded "><a href="propositions_and_proofs.html"><strong aria-hidden="true">3.</strong> 命题和证明</a></li><li class="chapter-item expanded "><a href="quantifiers_and_equality.html"><strong aria-hidden="true">4.</strong> 量词和相等</a></li><li class="chapter-item expanded "><a href="tactics.html" class="active"><strong aria-hidden="true">5.</strong> 策略</a></li><li class="chapter-item expanded "><a href="interacting_with_lean.html"><strong aria-hidden="true">6.</strong> 与Lean交互</a></li><li class="chapter-item expanded "><a href="inductive_types.html"><strong aria-hidden="true">7.</strong> 归纳类型</a></li><li class="chapter-item expanded "><a href="induction_and_recursion.html"><strong aria-hidden="true">8.</strong> 归纳和递归</a></li><li class="chapter-item expanded "><a href="structures_and_records.html"><strong aria-hidden="true">9.</strong> 结构和记录</a></li><li class="chapter-item expanded "><a href="type_classes.html"><strong aria-hidden="true">10.</strong> 类型类</a></li><li class="chapter-item expanded "><a href="conv.html"><strong aria-hidden="true">11.</strong> 转化策略模式</a></li><li class="chapter-item expanded "><a href="axioms_and_computation.html"><strong aria-hidden="true">12.</strong> 公理和计算</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Theorem Proving in Lean 4</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/RexWzh/theorem_proving_in_lean4" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="策略"><a class="header" href="#策略">策略</a></h1>
+<p>在这一章中，我们将介绍一种构建证明的替代方法，使用 <em>策略</em>。证明项是数学证明的一种表示；策略是一种命令或指令，描述如何构建这样的证明。简单地说，您可能开始一个数学证明时会说“为了证明正向推理，展开定义，应用前一个引理，并化简。”就像这些是告诉读者如何找到相关证明的指示一样，策略是告诉 Lean 如何构建一个证明项的指令。它们自然地支持一种逐步编写证明的风格，您可以将证明分解并逐步处理目标。</p>
+<p>我们将由一系列策略组成的证明称为“策略样式”证明，以与我们目前已经见过的编写证明项的方式相对比，后者被称为“术语样式”证明。每种样式都有其优点和缺点。例如，策略样式的证明可能更难阅读，因为它们要求读者预测或猜测每个指令的结果。但它们也可以更短更容易编写。此外，策略为使用 Lean 的自动化提供了一个入口，因为自动化过程本身也是策略。</p>
+<h2 id="进入策略模式"><a class="header" href="#进入策略模式">进入策略模式</a></h2>
+<p>从概念上讲，陈述一个定理或引入一个<code>have</code>语句都会创建一个目标，即构造一个具有预期类型的项。例如，下面的代码会创建一个目标，需要构造一个类型为<code>p ∧ q ∧ p</code>的项，在上下文中有常数<code>p q : Prop</code>，<code>hp : p</code>和<code>hq : q</code>：</p>
+<pre><code class="language-lean">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p :=
+  sorry
+</code></pre>
+<p>你可以将这个目标写成以下形式：</p>
+<pre><code>    p : Prop, q : Prop, hp : p, hq : q ⊢ p ∧ q ∧ p
+</code></pre>
+<p>确实，在上面的例子中，如果你将 &quot;sorry&quot; 替换为空白符号，Lean 将报告这个目标没有被解决。</p>
+<p>通常，你可以通过编写一个明确的术语来达成这个目标。然而，当需要一个术语的地方，Lean 允许我们插入一个 <code>by &lt;tactics&gt;</code> 块，其中 <code>&lt;tactics&gt;</code> 是一系列通过分号或换行符分隔的命令。你可以通过以下方式证明上述定理：</p>
+<pre><code class="language-lean">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p :=
+  by apply And.intro
+     exact hp
+     apply And.intro
+     exact hq
+     exact hp
+</code></pre>
+<p>我们通常将 <code>by</code> 关键字放在前一行，并将上面的示例写为：</p>
+<pre><code class="language-lean">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+  apply And.intro
+  exact hp
+  apply And.intro
+  exact hq
+  exact hp
+</code></pre>
+<p><code>apply</code>策略将一个表达式应用于一个被视为具有零个或多个参数的函数。它将当前目标的结论与表达式进行统一，并为剩余的参数创建新的子目标，前提是后续参数不依赖于它们。在上面的例子中，命令 <code>apply And.intro</code> 生成了两个子目标：</p>
+<pre><code>    case left
+    p q : Prop
+    hp : p
+    hq : q
+    ⊢ p
+
+    case right
+    p q : Prop
+    hp : p
+    hq : q
+    ⊢ q ∧ p
+</code></pre>
+<p>第一个目标通过命令 <code>exact hp</code> 实现。<code>exact</code> 命令是 <code>apply</code> 的一种变体，用于指示给定的表达式应该完全填充目标。在策略证明中使用它是好的做法，因为它的失败会提示出现了问题。与 <code>apply</code> 相比，<code>exact</code> 更可靠，因为在处理应用的表达式时，解析器会考虑目标的预期类型。然而，在这种情况下，<code>apply</code> 也同样适用。</p>
+<p>您可以使用 <code>#print</code> 命令查看生成的证明项（proof term）：</p>
+<pre><code class="language-lean"># theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+#  apply And.intro
+#  exact hp
+#  apply And.intro
+#  exact hq
+#  exact hp
+#print test
+</code></pre>
+<p>你可以逐步编写一个策略脚本。在 VS Code 中，按下 <code>Ctrl-Shift-Enter</code> 可以打开一个窗口显示消息，当光标在策略块中时，该窗口会显示当前的目标。在 Emacs 中，按下 <code>C-c C-g</code> 会在任意行的末尾显示目标，或者在不完整的证明中将光标放在最后一个策略的第一个字符之后以查看剩余的目标。如果证明不完整，关键字 <code>by</code> 将会被一个红色波浪线标记，错误消息中也会包含剩余的目标。</p>
+<p>策略命令可以接受复合表达式，而不仅仅是单个标识符。下面是前面证明的较短版本：</p>
+<pre><code class="language-lean">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+  apply And.intro hp
+  exact And.intro hq hp
+</code></pre>
+<p>不出意外，它产生了完全相同的证明术语。</p>
+<pre><code class="language-lean"># theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+#  apply And.intro hp
+#  exact And.intro hq hp
+#print test
+</code></pre>
+<p>多个策略应用可以通过分号连接在一行上写出。</p>
+<p>这是因为 Lean 每行只执行一个策略应用，但是可以通过在每个策略应用之间添加分号来在一行中一次性应用多个策略。这种写法能够提高代码的紧凑性和可读性。</p>
+<p>在 Lean 中，策略（tactic）是一种用于构造和变换证明的指令。它们可以被应用于目标（goal）或者证明的间断点（proof state）。策略的应用会改变目标或证明的状态，并且可以用于引入、消去、重写等操作。使用策略可以帮助我们更有效地构建证明。</p>
+<p>例如，假设我们有两个策略 <code>tac1</code> 和 <code>tac2</code>，并且我们想在当前的目标上依次应用这两个策略。我们可以在一行中使用分号将它们连接起来，如下所示：</p>
+<pre><code class="language-lean">tac1; tac2
+</code></pre>
+<p>这将首先应用 <code>tac1</code> 策略，然后将 <code>tac2</code> 策略应用于产生的证明状态。通过这种方式，我们可以在一行中一次性应用多个策略，简化证明过程。</p>
+<p>总而言之，通过在 Lean 中使用分号来连接多个策略的应用，我们可以在一行上写出多个策略的代码，提高代码的紧凑性和可读性。</p>
+<pre><code class="language-lean">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+  apply And.intro hp; exact And.intro hq hp
+</code></pre>
+<p>可能会产生多个子目标的策略通常会给它们加上标签。例如，策略 <code>apply And.intro</code> 将第一个子目标标记为 <code>left</code>，第二个子目标标记为 <code>right</code>。对于 <code>apply</code> 策略，标签是从 <code>And.intro</code> 声明中使用的参数名推断出来的。您可以使用记法 <code>case &lt;tag&gt; =&gt; &lt;tactics&gt;</code> 来结构化您的策略。以下是我们在本章中第一个策略证明的结构化版本。</p>
+<pre><code>Lemma and_commutative :
+  forall P Q : Prop, P /\ Q -&gt; Q /\ P.
+Proof.
+  intros P Q H.
+  apply And.intro as left.
+  case left.
+    intros p q.
+    apply And.intro.
+      exact q.
+      exact p.
+Qed.
+</code></pre>
+<p>这个例子中，我们给 <code>apply And.intro</code> 的第一个子目标加上了标签 <code>left</code>。然后，我们根据标签来结构化策略并进行证明。在 <code>case left</code> 中，我们使用了 <code>intros p q</code> 来引入标记为 <code>left</code> 的子目标的假设，并使用 <code>apply And.intro</code> 来继续证明。最后，我们使用了 <code>exact</code> 策略来完成证明。</p>
+<pre><code class="language-lean">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+  apply And.intro
+  case left =&gt; exact hp
+  case right =&gt;
+    apply And.intro
+    case left =&gt; exact hq
+    case right =&gt; exact hp
+</code></pre>
+<p>你可以使用<code>case</code>符号在解决<code>left</code>之前解决子目标<code>right</code>：</p>
+<pre><code class="language-lean">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+  apply And.intro
+  case right =&gt;
+    apply And.intro
+    case left =&gt; exact hq
+    case right =&gt; exact hp
+  case left =&gt; exact hp
+</code></pre>
+<p>请注意，Lean 将其他目标隐藏在 <code>case</code> 块中。我们称之为“聚焦”在所选目标上。此外，如果所选目标在 <code>case</code> 块结束时没有完全解决，Lean 会报错。</p>
+<p>对于简单的子目标来说，可能没有必要使用标签选择子目标，但你可能仍然希望结构化证明。Lean 还提供了“bullet”符号的记法<code>. &lt;策略&gt;</code>（或 <code>· &lt;策略&gt;</code>）用于结构化证明。</p>
+<pre><code class="language-lean">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p := by
+  apply And.intro
+  . exact hp
+  . apply And.intro
+    . exact hq
+    . exact hp
+</code></pre>
+<h2 id="基本策略"><a class="header" href="#基本策略">基本策略</a></h2>
+<p>除了 <code>apply</code> 和 <code>exact</code> 外，另一个有用的策略是 <code>intro</code>，它引入了一个假设。接下来是一个在前一章中我们在命题逻辑中证明的恒等式的例子，现在我们将使用策略来证明它。</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := by
+  apply Iff.intro
+  . intro h
+    apply Or.elim (And.right h)
+    . intro hq
+      apply Or.inl
+      apply And.intro
+      . exact And.left h
+      . exact hq
+    . intro hr
+      apply Or.inr
+      apply And.intro
+      . exact And.left h
+      . exact hr
+  . intro h
+    apply Or.elim h
+    . intro hpq
+      apply And.intro
+      . exact And.left hpq
+      . apply Or.inl
+        exact And.right hpq
+    . intro hpr
+      apply And.intro
+      . exact And.left hpr
+      . apply Or.inr
+        exact And.right hpr
+</code></pre>
+<p><code>intro</code> 命令可以更一般地用于引入任意类型的变量：</p>
+<pre><code class="language-lean">example (α : Type) : α → α := by
+  intro a
+  exact a
+
+example (α : Type) : ∀ x : α, x = x := by
+  intro x
+  exact Eq.refl x
+</code></pre>
+<p>可以使用它来介绍几个变量：</p>
+<pre><code class="language-lean">example : ∀ a b c : Nat, a = b → a = c → c = b := by
+  intro a b c h₁ h₂
+  exact Eq.trans (Eq.symm h₂) h₁
+</code></pre>
+<p>正如<code>apply</code>策略用于交互式构建函数应用一样，<code>intro</code>策略用于交互式构建函数抽象（例如，<code>fun x =&gt; e</code>形式的项）。与lambda抽象记法一样，<code>intro</code>策略允许我们使用隐式的<code>match</code>。</p>
+<pre><code class="language-lean">example (α : Type) (p q : α → Prop) : (∃ x, p x ∧ q x) → ∃ x, q x ∧ p x := by
+  intro ⟨w, hpw, hqw⟩
+  exact ⟨w, hqw, hpw⟩
+</code></pre>
+<p>你还可以像 <code>match</code> 表达式一样提供多个选择。</p>
+<pre><code class="language-lean">example (α : Type) (p q : α → Prop) : (∃ x, p x ∨ q x) → ∃ x, q x ∨ p x := by
+  intro
+  | ⟨w, Or.inl h⟩ =&gt; exact ⟨w, Or.inr h⟩
+  | ⟨w, Or.inr h⟩ =&gt; exact ⟨w, Or.inl h⟩
+</code></pre>
+<p><code>intros</code> 策略可以在没有参数的情况下使用，此时它会选择变量的名称并引入尽可能多的变量。您即将看到一个示例。</p>
+<p><code>assumption</code> 策略会查找上下文中与当前目标匹配的假设，如果找到匹配的假设，则应用该假设。</p>
+<pre><code class="language-lean">example (x y z w : Nat) (h₁ : x = y) (h₂ : y = z) (h₃ : z = w) : x = w := by
+  apply Eq.trans h₁
+  apply Eq.trans h₂
+  assumption   -- applied h₃
+</code></pre>
+<p>必要时，它会统一结论中的元变量：</p>
+<pre><code class="language-lean">example (x y z w : Nat) (h₁ : x = y) (h₂ : y = z) (h₃ : z = w) : x = w := by
+  apply Eq.trans
+  assumption      -- solves x = ?b with h₁
+  apply Eq.trans
+  assumption      -- solves y = ?h₂.b with h₂
+  assumption      -- solves z = w with h₃
+</code></pre>
+<p>下面的示例使用 <code>intros</code> 命令自动引入三个变量和两个假设：</p>
+<pre><code class="language-lean">example : ∀ a b c : Nat, a = b → a = c → c = b := by
+  intros
+  apply Eq.trans
+  apply Eq.symm
+  assumption
+  assumption
+</code></pre>
+<p>请注意，默认情况下，Lean 自动生成的名称是不可访问的。这么做的目的是确保你的策略证明不依赖于自动生成的名称，从而使其更加健壮。但是，你可以使用组合子 <code>unhygienic</code> 来取消此限制。</p>
+<pre><code class="language-lean">example : ∀ a b c : Nat, a = b → a = c → c = b := by unhygienic
+  intros
+  apply Eq.trans
+  apply Eq.symm
+  exact a_2
+  exact a_1
+</code></pre>
+<p>你还可以使用 <code>rename_i</code> 策略来重命名上下文中最近不可访问的名称。
+在下面的例子中，策略 <code>rename_i h1 _ h2</code> 重命名了上下文中最后三个假设中的两个。</p>
+<pre><code class="language-lean">example : ∀ a b c d : Nat, a = b → a = d → a = c → c = b := by
+  intros
+  rename_i h1 _ h2
+  apply Eq.trans
+  apply Eq.symm
+  exact h2
+  exact h1
+</code></pre>
+<p><code>rfl</code> 策略是 <code>exact rfl</code> 的语法糖。</p>
+<pre><code class="language-lean">example (y : Nat) : (fun x : Nat =&gt; 0) y = 0 :=
+  by rfl
+</code></pre>
+<p><code>repeat</code> 组合子可以用来多次应用一种策略。</p>
+<pre><code class="language-lean">example : ∀ a b c : Nat, a = b → a = c → c = b := by
+  intros
+  apply Eq.trans
+  apply Eq.symm
+  repeat assumption
+</code></pre>
+<p>有时候，另一种有用的策略是<code>revert</code>策略，从某种意义上说，它是<code>intro</code>的逆向操作。</p>
+<pre><code class="language-lean">example (x : Nat) : x = x := by
+  revert x
+  -- goal is ⊢ ∀ (x : Nat), x = x
+  intro y
+  -- goal is y : Nat ⊢ y = y
+  rfl
+</code></pre>
+<p>将一个假设移动到目标中，可以得到一个蕴含关系：</p>
+<pre><code>H : P
+============================
+P
+</code></pre>
+<p>In Lean, we can write this as:</p>
+<pre><code>example (P : Prop) (H : P) : P := H
+</code></pre>
+<p>Here, <code>P</code> represents a proposition (an assertion or a statement), and <code>H</code> represents a proof or evidence for <code>P</code>. The goal is to prove <code>P</code> using the hypothesis <code>H</code>. In Lean, the <code>example</code> keyword is used to introduce a new theorem or lemma. The proof is simply the hypothesis <code>H</code> itself, as it already provides the evidence needed to prove <code>P</code>. Therefore, by applying <code>H</code> as the proof, we can conclude that <code>P</code> is true.</p>
+<pre><code class="language-lean">example (x y : Nat) (h : x = y) : y = x := by
+  revert h
+  -- goal is x y : Nat ⊢ x = y → y = x
+  intro h₁
+  -- goal is x y : Nat, h₁ : x = y ⊢ y = x
+  apply Eq.symm
+  assumption
+</code></pre>
+<p>但是 <code>revert</code> 更加聪明，不仅会还原上下文中的一个元素，还会还原依赖于它的所有后续元素。例如，在上面的例子中，还原 <code>x</code> 会同时带回 <code>h</code>：</p>
+<pre><code class="language-lean">example (x y : Nat) (h : x = y) : y = x := by
+  revert x
+  -- goal is y : Nat ⊢ ∀ (x : Nat), x = y → y = x
+  intros
+  apply Eq.symm
+  assumption
+</code></pre>
+<p>您也可以一次撤销多个上下文元素:</p>
+<pre><code class="language-lean">example (x y : Nat) (h : x = y) : y = x := by
+  revert x y
+  -- goal is ⊢ ∀ (x y : Nat), x = y → y = x
+  intros
+  apply Eq.symm
+  assumption
+</code></pre>
+<p>你只能 <code>revert</code> 本地上下文中的一个元素，也就是局部变量或假设。但是你可以使用 <code>generalize</code> 策略，将目标中的任意表达式替换为一个新的变量。</p>
+<pre><code class="language-lean">example : 3 = 3 := by
+  generalize 3 = x
+  -- goal is x : Nat ⊢ x = x
+  revert x
+  -- goal is ⊢ ∀ (x : Nat), x = x
+  intro y
+  -- goal is y : Nat ⊢ y = y
+  rfl
+</code></pre>
+<p>上述表示法中的助记符是，通过将 &quot;3&quot; 设置为一个任意变量 &quot;x&quot;，对目标进行泛化。注意：并非每个泛化都能保持目标的有效性。在这里，&quot;generalize&quot; 替换了一个可以使用 &quot;rfl&quot; 证明的目标，变为了一个不可证明的目标：</p>
+<pre><code class="language-lean">example : 2 + 3 = 5 := by
+  generalize 3 = x
+  -- goal is x : Nat ⊢ 2 + x = 5
+  admit
+</code></pre>
+<p>在这个例子中，<code>admit</code> 策略是 <code>sorry</code> 证明项的类比。它关闭当前的目标，并产生通常的警告，表明<code>sorry</code> 已被使用。为了保留先前目标的有效性，<code>generalize</code> 策略允许我们记录<code>3</code>被<code>x</code>替代的事实。您只需要提供一个标签，<code>generalize</code> 将使用它来将分配存储在本地上下文中：</p>
+<pre><code class="language-lean">example : 2 + 3 = 5 := by
+  generalize h : 3 = x
+  -- goal is x : Nat, h : 3 = x ⊢ 2 + x = 5
+  rw [← h]
+</code></pre>
+<p><code>rewrite</code> 策略使用 <code>h</code> 来再次用 <code>3</code> 替换 <code>x</code>。下面将讨论 <code>rewrite</code> 策略。</p>
+<h2 id="更多策略"><a class="header" href="#更多策略">更多策略</a></h2>
+<p>有一些附加的策略对于构造和析构命题和数据很有用。例如，当应用于形式为 <code>p ∨ q</code> 的目标时，你可以使用诸如 <code>apply Or.inl</code> 和 <code>apply Or.inr</code> 的策略。反过来，<code>cases</code> 策略可以用于分解一个或关系。</p>
+<pre><code class="language-lean">example (p q : Prop) : p ∨ q → q ∨ p := by
+  intro h
+  cases h with
+  | inl hp =&gt; apply Or.inr; exact hp
+  | inr hq =&gt; apply Or.inl; exact hq
+</code></pre>
+<p>注意，语法与 <code>match</code> 表达式中使用的语法相似。
+新的子目标可以以任何顺序解决。</p>
+<pre><code class="language-lean">example (p q : Prop) : p ∨ q → q ∨ p := by
+  intro h
+  cases h with
+  | inr hq =&gt; apply Or.inl; exact hq
+  | inl hp =&gt; apply Or.inr; exact hp
+</code></pre>
+<p>你也可以使用一个（非结构化的）不带 <code>with</code> 的 <code>cases</code> 结构以及为每个分支使用一个策略。</p>
+<pre><code class="language-lean">example (p q : Prop) : p ∨ q → q ∨ p := by
+  intro h
+  cases h
+  apply Or.inr
+  assumption
+  apply Or.inl
+  assumption
+</code></pre>
+<p>(unstructured) <code>cases</code> 在你可以使用同一个策略关闭多个子目标时特别有用。</p>
+<pre><code class="language-lean">example (p : Prop) : p ∨ p → p := by
+  intro h
+  cases h
+  repeat assumption
+</code></pre>
+<p>您还可以使用组合符号<code>tac1 &lt;;&gt; tac2</code>，将<code>tac2</code>应用于<code>tac1</code>产生的每个子目标。</p>
+<pre><code class="language-lean">example (p : Prop) : p ∨ p → p := by
+  intro h
+  cases h &lt;;&gt; assumption
+</code></pre>
+<p>您可以将 <code>cases</code> 策略与 <code>case</code> 和 <code>.</code> 符号结合使用。</p>
+<pre><code class="language-lean">example (p q : Prop) : p ∨ q → q ∨ p := by
+  intro h
+  cases h
+  . apply Or.inr
+    assumption
+  . apply Or.inl
+    assumption
+
+example (p q : Prop) : p ∨ q → q ∨ p := by
+  intro h
+  cases h
+  case inr h =&gt;
+    apply Or.inl
+    assumption
+  case inl h =&gt;
+    apply Or.inr
+    assumption
+
+example (p q : Prop) : p ∨ q → q ∨ p := by
+  intro h
+  cases h
+  case inr h =&gt;
+    apply Or.inl
+    assumption
+  . apply Or.inr
+    assumption
+</code></pre>
+<p><code>cases</code>策略也可以用于分解合取式。</p>
+<p>在 Lean 中，合取式是由逻辑“与”操作符<code>∧</code>连接的两个或多个命题。使用<code>cases</code>策略来分解合取式，可以把一个合取式分解为多个子目标，并分别处理每个子目标。</p>
+<p>下面是一个示例：</p>
+<pre><code class="language-lean">example (P Q : Prop) : P ∧ Q → (P → Q) :=
+begin
+  intro h,
+  cases h with hP hQ,
+  intro h'P,
+  exact hQ
+end
+</code></pre>
+<p>在这个例子中，我们假设<code>P</code>和<code>Q</code>是命题，<code>P ∧ Q</code>是一个合取式。我们的目标是证明<code>P ∧ Q</code>蕴含<code>P → Q</code>。首先使用<code>intro</code>策略引入前提假设<code>h : P ∧ Q</code>，然后使用<code>cases</code>策略分解合取式，得到两个子目标：<code>hP : P</code>和<code>hQ : Q</code>。接着，使用<code>intro</code>策略引入新的前提假设<code>h'P : P</code>，最后使用<code>exact</code>策略证明<code>Q</code>，从而完成了证明。</p>
+<p>通过使用<code>cases</code>策略，在拥有合取式的证明中可以更方便地处理每个子目标，从而推导出相应的结论。</p>
+<pre><code class="language-lean">example (p q : Prop) : p ∧ q → q ∧ p := by
+  intro h
+  cases h with
+  | intro hp hq =&gt; constructor; exact hq; exact hp
+</code></pre>
+<p>在这个例子中，<code>cases</code>策略应用后只有一个目标，<code>h : p ∧ q</code> 被一对假设<code>hp : p</code> 和 <code>hq : q</code> 替换。<code>constructor</code>策略应用了合取的唯一构造子<code>And.intro</code>。通过使用这些策略，前一节中的一个例子可以重写如下：</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := by
+  apply Iff.intro
+  . intro h
+    cases h with
+    | intro hp hqr =&gt;
+      cases hqr
+      . apply Or.inl; constructor &lt;;&gt; assumption
+      . apply Or.inr; constructor &lt;;&gt; assumption
+  . intro h
+    cases h with
+    | inl hpq =&gt;
+      cases hpq with
+      | intro hp hq =&gt; constructor; exact hp; apply Or.inl; exact hq
+    | inr hpr =&gt;
+      cases hpr with
+      | intro hp hr =&gt; constructor; exact hp; apply Or.inr; exact hr
+</code></pre>
+<p>你将在 <a href="./inductive_types.html">归纳类型章节</a> 中看到，这些策略非常通用。 <code>cases</code> 策略可以用于分解归纳定义类型的任何元素；<code>constructor</code> 总是应用归纳定义类型的第一个可用构造函数。例如，你可以使用 <code>cases</code> 和 <code>constructor</code> 来处理存在量词的情况：</p>
+<pre><code class="language-lean">example (p q : Nat → Prop) : (∃ x, p x) → ∃ x, p x ∨ q x := by
+  intro h
+  cases h with
+  | intro x px =&gt; constructor; apply Or.inl; exact px
+</code></pre>
+<p>在这里，<code>constructor</code> 策略将存在量化命题的第一个组成部分 <code>x</code> 的值留下隐含。它由一个元变量表示，应该在后面被实例化。在前面的例子中，元变量的正确值由策略 <code>exact px</code> 决定，因为 <code>px</code> 的类型是 <code>p x</code>。如果您想明确指定对存在量词的见证，可以使用 <code>exists</code> 策略替代：</p>
+<pre><code class="language-lean">example (p q : Nat → Prop) : (∃ x, p x) → ∃ x, p x ∨ q x := by
+  intro h
+  cases h with
+  | intro x px =&gt; exists x; apply Or.inl; exact px
+</code></pre>
+<p>这里是另一个例子：</p>
+<pre><code class="language-lean">example (p q : Nat → Prop) : (∃ x, p x ∧ q x) → ∃ x, q x ∧ p x := by
+  intro h
+  cases h with
+  | intro x hpq =&gt;
+    cases hpq with
+    | intro hp hq =&gt;
+      exists x
+</code></pre>
+<p>这些策略同样适用于数据和命题。在下一个示例中，它们被用来定义函数，用于交换乘积类型和求和类型的组成部分：</p>
+<pre><code class="language-lean">def swap_pair : α × β → β × α := by
+  intro p
+  cases p
+  constructor &lt;;&gt; assumption
+
+def swap_sum : Sum α β → Sum β α := by
+  intro p
+  cases p
+  . apply Sum.inr; assumption
+  . apply Sum.inl; assumption
+</code></pre>
+<p>请注意，我们选择的变量名称之前，这些定义与对于<strong>合取</strong>和<strong>析取</strong>的相应命题的证明完全相同。<code>cases</code>策略也可以对自然数进行情况分析：</p>
+<pre><code class="language-lean">open Nat
+example (P : Nat → Prop) (h₀ : P 0) (h₁ : ∀ n, P (succ n)) (m : Nat) : P m := by
+  cases m with
+  | zero    =&gt; exact h₀
+  | succ m' =&gt; exact h₁ m'
+</code></pre>
+<p>在<strong>归纳类型的策略</strong>一节中详细讨论了<code>cases</code>策略和它的伙伴<code>induction</code>策略。</p>
+<p><code>contradiction</code>策略在当前目标的假设中搜索矛盾。</p>
+<pre><code class="language-lean">example (p q : Prop) : p ∧ ¬ p → q := by
+  intro h
+  cases h
+  contradiction
+</code></pre>
+<p>你还可以在策略块中使用 <code>match</code>。</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := by
+  apply Iff.intro
+  . intro h
+    match h with
+    | ⟨_, Or.inl _⟩ =&gt; apply Or.inl; constructor &lt;;&gt; assumption
+    | ⟨_, Or.inr _⟩ =&gt; apply Or.inr; constructor &lt;;&gt; assumption
+  . intro h
+    match h with
+    | Or.inl ⟨hp, hq⟩ =&gt; constructor; exact hp; apply Or.inl; exact hq
+    | Or.inr ⟨hp, hr⟩ =&gt; constructor; exact hp; apply Or.inr; exact hr
+</code></pre>
+<p>你可以将 <code>intro h</code> 与 <code>match h ...</code> 结合起来，将之前的例子写成以下形式：</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := by
+  apply Iff.intro
+  . intro
+    | ⟨hp, Or.inl hq⟩ =&gt; apply Or.inl; constructor &lt;;&gt; assumption
+    | ⟨hp, Or.inr hr⟩ =&gt; apply Or.inr; constructor &lt;;&gt; assumption
+  . intro
+    | Or.inl ⟨hp, hq⟩ =&gt; constructor; assumption; apply Or.inl; assumption
+    | Or.inr ⟨hp, hr⟩ =&gt; constructor; assumption; apply Or.inr; assumption
+</code></pre>
+<h2 id="构造策略证明"><a class="header" href="#构造策略证明">构造策略证明</a></h2>
+<p>策略通常提供了一种有效的建立证明的方法，但是长串的指令可能会掩盖论证的结构。在本节中，我们描述一些方法，帮助为策略样式的证明提供结构，使得这样的证明更易读和稳定。</p>
+<p>Lean的证明写作语法的一个好处是可以混合使用术语样式和策略样式的证明，并且可以自由地在两者之间切换。例如，策略<code>apply</code>和<code>exact</code>都需要任意术语，你可以使用<code>have</code>、<code>show</code>等方式来编写这些术语。相反，当编写一个任意的Lean术语时，你总是可以通过插入一个<code>by</code>块来调用策略模式。下面是一个有点玩具化的例子：</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) → (p ∧ q) ∨ (p ∧ r) := by
+  intro h
+  exact
+    have hp : p := h.left
+    have hqr : q ∨ r := h.right
+    show (p ∧ q) ∨ (p ∧ r) by
+      cases hqr with
+      | inl hq =&gt; exact Or.inl ⟨hp, hq⟩
+      | inr hr =&gt; exact Or.inr ⟨hp, hr⟩
+</code></pre>
+<p>以下是一个更自然的例子：</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := by
+  apply Iff.intro
+  . intro h
+    cases h.right with
+    | inl hq =&gt; exact Or.inl ⟨h.left, hq⟩
+    | inr hr =&gt; exact Or.inr ⟨h.left, hr⟩
+  . intro h
+    cases h with
+    | inl hpq =&gt; exact ⟨hpq.left, Or.inl hpq.right⟩
+    | inr hpr =&gt; exact ⟨hpr.left, Or.inr hpr.right⟩
+</code></pre>
+<p>实际上，Coq 中有一种名为<code>show</code>的策略，类似于证明项中的<code>show</code>表达式。它在策略模式下，用于声明即将解决的目标的类型。</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := by
+  apply Iff.intro
+  . intro h
+    cases h.right with
+    | inl hq =&gt;
+      show (p ∧ q) ∨ (p ∧ r)
+      exact Or.inl ⟨h.left, hq⟩
+    | inr hr =&gt;
+      show (p ∧ q) ∨ (p ∧ r)
+      exact Or.inr ⟨h.left, hr⟩
+  . intro h
+    cases h with
+    | inl hpq =&gt;
+      show p ∧ (q ∨ r)
+      exact ⟨hpq.left, Or.inl hpq.right⟩
+    | inr hpr =&gt;
+      show p ∧ (q ∨ r)
+      exact ⟨hpr.left, Or.inr hpr.right⟩
+</code></pre>
+<p><code>show</code>策略可以用于将一个目标重写为在定义上等价的形式：</p>
+<pre><code class="language-lean">theorem show_tactic : ∀ (P : Prop), P → P :=
+begin
+  intro P,
+  show P, -- 使用 show 策略
+  exact id, -- 使用 id 函数将目标转化为定义上等价的形式
+end
+</code></pre>
+<p>该例子证明了对于任意命题 P，如果已知 P 成立，那么 P 也成立。在证明的过程中，我们使用了 <code>show</code> 策略，将目标 <code>P</code> 重写为定义上等价的形式。通过使用 <code>exact id</code> 策略，我们将目标转化为一个恒等函数 <code>id</code>，从而完成了证明。</p>
+<pre><code class="language-lean">example (n : Nat) : n + 1 = Nat.succ n := by
+  show Nat.succ n = Nat.succ n
+  rfl
+</code></pre>
+<p>还有一种“have”策略，它引入一个新的子目标，就像写证明项时一样：</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) → (p ∧ q) ∨ (p ∧ r) := by
+  intro ⟨hp, hqr⟩
+  show (p ∧ q) ∨ (p ∧ r)
+  cases hqr with
+  | inl hq =&gt;
+    have hpq : p ∧ q := And.intro hp hq
+    apply Or.inl
+    exact hpq
+  | inr hr =&gt;
+    have hpr : p ∧ r := And.intro hp hr
+    apply Or.inr
+    exact hpr
+</code></pre>
+<p>和证明项一样，你可以在 <code>have</code> 策略中省略标签，这种情况下默认的标签 <code>this</code> 会被使用：</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) → (p ∧ q) ∨ (p ∧ r) := by
+  intro ⟨hp, hqr⟩
+  show (p ∧ q) ∨ (p ∧ r)
+  cases hqr with
+  | inl hq =&gt;
+    have : p ∧ q := And.intro hp hq
+    apply Or.inl
+    exact this
+  | inr hr =&gt;
+    have : p ∧ r := And.intro hp hr
+    apply Or.inr
+    exact this
+</code></pre>
+<p>在策略<code>have</code>中可以省略类型声明，因此可以写成<code>have hp := h.left</code>和<code>have hqr := h.right</code>。实际上，使用这个记号，甚至可以同时省略类型和标签，这种情况下，新的事实会被引入并以标签<code>this</code>命名。</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) → (p ∧ q) ∨ (p ∧ r) := by
+  intro ⟨hp, hqr⟩
+  cases hqr with
+  | inl hq =&gt;
+    have := And.intro hp hq
+    apply Or.inl; exact this
+  | inr hr =&gt;
+    have := And.intro hp hr
+    apply Or.inr; exact this
+</code></pre>
+<p>Lean 还提供了一个 <code>let</code> 策略，类似于 <code>have</code> 策略，但是用于引入局部定义而不是辅助事实。它是证明项中的 <code>let</code> 的策略模拟。</p>
+<pre><code class="language-lean">example : ∃ x, x + 2 = 8 := by
+  let a : Nat := 3 * 2
+  exists a
+</code></pre>
+<p>与 <code>have</code> 类似，你可以通过写成 <code>let a := 3 * 2</code> 的形式来省略类型的定义。<code>let</code> 和 <code>have</code> 的不同之处在于，<code>let</code> 在上下文中引入了一个局部定义，因此局部声明的定义可以在证明中展开。</p>
+<p>我们使用<code>.</code>来创建嵌套的策略块。在嵌套块中，Lean 关注第一个目标，并在块结束时生成错误，如果此目标未被完全解决。这对于指示由策略引入的多个子目标的单独证明是有帮助的。<code>.</code> 的符号对空白字符敏感，并依赖缩进来检测策略块的结束。或者，你可以使用花括号和分号来定义策略块。</p>
+<pre><code class="language-lean">example (p q r : Prop) : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) := by
+  apply Iff.intro
+  { intro h;
+    cases h.right;
+    { show (p ∧ q) ∨ (p ∧ r);
+      exact Or.inl ⟨h.left, ‹q›⟩ }
+    { show (p ∧ q) ∨ (p ∧ r);
+      exact Or.inr ⟨h.left, ‹r›⟩ } }
+  { intro h;
+    cases h;
+    { show p ∧ (q ∨ r);
+      rename_i hpq;
+      exact ⟨hpq.left, Or.inl hpq.right⟩ }
+    { show p ∧ (q ∨ r);
+      rename_i hpr;
+      exact ⟨hpr.left, Or.inr hpr.right⟩ } }
+</code></pre>
+<p>使用缩进来结构化证明是很有用的：每当一个策略产生超过一个子目标时，我们会用块来将剩余的子目标分隔开，并进行缩进。因此，如果将定理 <code>foo</code> 应用于一个目标产生了四个子目标，那么我们期望证明的样子是这样的：</p>
+<pre><code>  apply foo
+  . &lt;proof of first goal&gt;
+  . &lt;proof of second goal&gt;
+  . &lt;proof of third goal&gt;
+  . &lt;proof of final goal&gt;
+</code></pre>
+<p>好的，下面是关于 LEAN 定理证明的文章的中文翻译：</p>
+<h1 id="lean-定理证明"><a class="header" href="#lean-定理证明">LEAN 定理证明</a></h1>
+<h2 id="引言"><a class="header" href="#引言">引言</a></h2>
+<p>在数学和逻辑学中，定理证明是一种通过逻辑推理来证明数学命题的过程。而 LEAN 是一个支持形式化证明的交互式定理证明系统。在本文中，我们将介绍如何在 LEAN 中使用构造性数学来证明定理。</p>
+<h2 id="lean-简介"><a class="header" href="#lean-简介">LEAN 简介</a></h2>
+<p>LEAN 是一种基于依赖类型理论的交互式定理证明系统。它的设计目标是支持数学家和计算机科学家进行形式化证明，并提供严谨的证明检查机制。</p>
+<h2 id="构造性数学"><a class="header" href="#构造性数学">构造性数学</a></h2>
+<p>构造性数学是一种数学分支，它要求每个数学命题的证明都必须能够提供一个具体的构造过程。与传统数学不同，构造性数学注重于证明的可执行性。</p>
+<h2 id="lean-中的构造性证明"><a class="header" href="#lean-中的构造性证明">LEAN 中的构造性证明</a></h2>
+<p>在 LEAN 中，我们可以使用构造性数学的方法来证明定理。首先，我们需要定义一些基本的概念和符号，然后利用这些定义来构造一个具体的证明过程。</p>
+<h2 id="定理证明的过程"><a class="header" href="#定理证明的过程">定理证明的过程</a></h2>
+<p>在 LEAN 中，定理证明的过程通常分为以下几个步骤：</p>
+<ol>
+<li>定义概念和符号；</li>
+<li>陈述待证明的定理；</li>
+<li>给出证明的主要思路和策略；</li>
+<li>逐步展开证明过程，使用合适的规则和定理；</li>
+<li>最后，通过 LEAN 的证明检查机制来验证证明的正确性。</li>
+</ol>
+<h2 id="lean-中的规则和定理"><a class="header" href="#lean-中的规则和定理">LEAN 中的规则和定理</a></h2>
+<p>LEAN 中有许多已知的数学定理和规则，可以在证明中使用。这些定理和规则是经过验证和严格审查的，可以确保证明的正确性。</p>
+<h2 id="示例"><a class="header" href="#示例">示例</a></h2>
+<p>下面是一个简单的 LEAN 定理证明的示例：</p>
+<p><strong>定理</strong>：对于任意两个整数 a 和 b，存在一个整数 c，使得 a + b = c。</p>
+<p><strong>证明</strong>：我们可以使用引理 “整数的加法是满射” 来证明这个定理。根据这个引理，在整数集上的加法运算是满射的，即对于任意一个整数 c，总存在两个整数 a 和 b，使得 a + b = c。因此，我们可以得出结论，对于任意两个整数 a 和 b，存在一个整数 c，使得 a + b = c。</p>
+<h2 id="结论"><a class="header" href="#结论">结论</a></h2>
+<p>LEAN 是一个强大的定理证明系统，可以帮助数学家和计算机科学家形式化地证明定理。通过使用构造性数学的方法，在 LEAN 中进行定理证明可以提高证明的可执行性和严谨性。</p>
+<p>希望本文对您理解 LEAN 定理证明有所帮助！</p>
+<pre><code>  apply foo
+  case &lt;tag of first goal&gt;  =&gt; &lt;proof of first goal&gt;
+  case &lt;tag of second goal&gt; =&gt; &lt;proof of second goal&gt;
+  case &lt;tag of third goal&gt;  =&gt; &lt;proof of third goal&gt;
+  case &lt;tag of final goal&gt;  =&gt; &lt;proof of final goal&gt;
+</code></pre>
+<h1 id="lean-定理证明-1"><a class="header" href="#lean-定理证明-1">LEAN 定理证明</a></h1>
+<h2 id="引言-1"><a class="header" href="#引言-1">引言</a></h2>
+<p>Lean 是一款交互式证明助手和通用编程语言。它的设计目标是支持高效的定理证明和正确的程序开发。Lean 使用了基于类型论的直观、可理解的逻辑体系，并提供了一套表达式语言和工具来进行定理证明。</p>
+<p>在 Lean 中，定理证明是通过构造一个证明对象来完成的。证明对象是一个具有严密结构的表达式，可以描述证明中的逻辑推导过程。Lean 的类型检查器可以验证证明对象的正确性，并确保其与推导过程完全一致。</p>
+<p>下面我们将使用 Lean 来证明一个简单的定理。</p>
+<h2 id="定理及证明"><a class="header" href="#定理及证明">定理及证明</a></h2>
+<p><strong>定理</strong>：对于任意自然数 n，存在自然数 m，使得 n &lt; m。</p>
+<p><strong>证明</strong>：我们使用归纳法来证明这个定理。</p>
+<ul>
+<li>基础情况：令 n = 0，我们可以选择 m = 1。此时显然有 0 &lt; 1 成立。</li>
+<li>归纳步骤：假设对于某个自然数 k，存在自然数 m，使得 k &lt; m 成立。我们要证明对于 k + 1，也存在一个自然数 m'，使得 k + 1 &lt; m' 成立。</li>
+</ul>
+<p>根据归纳假设，存在一个自然数 m，使得 k &lt; m 成立。我们可以令 m' = m + 1，那么有：</p>
+<p>k + 1 &lt; m + 1</p>
+<p>根据自然数的性质，我们知道 m + 1 也是一个自然数。因此，对于任意自然数 k，都可以找到一个自然数 m'，使得 k + 1 &lt; m' 成立。</p>
+<p>综上所述，我们完成了对于任意自然数 n，存在自然数 m，使得 n &lt; m 的证明。</p>
+<h2 id="结论-1"><a class="header" href="#结论-1">结论</a></h2>
+<p>Lean 是一款强大的定理证明助手，可以帮助人们进行形式化证明。通过使用 Lean，我们可以确保证明的正确性和一致性，并充分发挥计算机的计算能力来辅助证明过程。Lean 的设计使得定理证明更加直观和可理解，同时也提供了丰富的工具和库来支持证明的开发和共享。</p>
+<pre><code>  apply foo
+  { &lt;proof of first goal&gt;  }
+  { &lt;proof of second goal&gt; }
+  { &lt;proof of third goal&gt;  }
+  { &lt;proof of final goal&gt;  }
+</code></pre>
+<p><em>策略组合子</em>是从旧策略中生成新策略的操作。在“by”块中已经隐式包含了一个顺序组合子：</p>
+<pre><code class="language-lean">example (p q : Prop) (hp : p) : p ∨ q :=
+  by apply Or.inl; assumption
+</code></pre>
+<p>这里，<code>apply Or.inl; assumption</code> 的功能上等同于一个单一的策略，它首先应用 <code>apply Or.inl</code>，然后应用 <code>assumption</code>。</p>
+<p>在 <code>t₁ &lt;;&gt; t₂</code> 中，<code>&lt;;&gt;</code> 运算符提供了一个<em>并行</em>版本的序列化操作：<code>t₁</code> 应用于当前目标，然后 <code>t₂</code> 应用于<em>所有</em>生成的子目标：</p>
+<pre><code class="language-lean">example (p q : Prop) (hp : p) (hq : q) : p ∧ q :=
+  by constructor &lt;;&gt; assumption
+</code></pre>
+<p>这在目标的结果可以以统一的方式完成或者至少在所有目标上可以统一取得进展时特别有用。</p>
+<p><code>first | t₁ | t₂ | ... | tₙ</code> 依次应用每个 <code>tᵢ</code>，直到其中一个成功或全部失败为止：</p>
+<pre><code class="language-lean">example (p q : Prop) (hp : p) : p ∨ q := by
+  first | apply Or.inl; assumption | apply Or.inr; assumption
+
+example (p q : Prop) (hq : q) : p ∨ q := by
+  first | apply Or.inl; assumption | apply Or.inr; assumption
+</code></pre>
+<p>在第一个例子中，左分支成功，而在第二个例子中，右分支成功。
+在接下来的三个例子中，相同的复合策略在每种情况下都成功。</p>
+<pre><code class="language-lean">example (p q r : Prop) (hp : p) : p ∨ q ∨ r :=
+  by repeat (first | apply Or.inl; assumption | apply Or.inr | assumption)
+
+example (p q r : Prop) (hq : q) : p ∨ q ∨ r :=
+  by repeat (first | apply Or.inl; assumption | apply Or.inr | assumption)
+
+example (p q r : Prop) (hr : r) : p ∨ q ∨ r :=
+  by repeat (first | apply Or.inl; assumption | apply Or.inr | assumption)
+</code></pre>
+<p>该策略试图立即通过假设来解决左边的析取；如果失败，则尝试专注于右边的析取；如果这也行不通，则调用假设策略。</p>
+<p>到目前为止，你肯定已经注意到策略可能会失败。事实上，正是“失败”状态导致<em>第一个</em>组合子回溯并尝试下一个策略。<code>try</code>组合子构建了一种总是成功的策略，尽管可能是以一种微不足道的方式：<code>try t</code>执行<code>t</code>并报告成功，即使<code>t</code>失败。它等同于<code>first | t | skip</code>，其中<code>skip</code>是一个什么都不做的策略（但成功地这么做）。在下一个示例中，第二个<code>constructor</code>在右边的合取<code>q ∧ r</code>上成功（请记住，析取和合取与右结合），但在第一个上失败。<code>try</code>策略确保了顺序组合成功。</p>
+<pre><code class="language-lean">example (p q r : Prop) (hp : p) (hq : q) (hr : r) : p ∧ q ∧ r := by
+  constructor &lt;;&gt; (try constructor) &lt;;&gt; assumption
+</code></pre>
+<p>小心：<code>repeat (try t)</code> 将会无限循环，因为内部 tactic 永远不会失败。</p>
+<p>在证明中，通常会有多个目标待证明。并行序列是一种可以将单个 tactic 应用于多个目标的方式，但也有其他的方式可以实现这一点。例如，<code>all_goals t</code> 将会将<code>t</code> 应用于所有待证明的目标：</p>
+<pre><code class="language-lean">example (p q r : Prop) (hp : p) (hq : q) (hr : r) : p ∧ q ∧ r := by
+  constructor
+  all_goals (try constructor)
+  all_goals assumption
+</code></pre>
+<p>在这种情况下，<code>any_goals</code>策略提供了一种更强大的解决方案。它类似于<code>all_goals</code>，但是只要其参数在至少一个目标上成功，它就会成功。</p>
+<pre><code class="language-lean">example (p q r : Prop) (hp : p) (hq : q) (hr : r) : p ∧ q ∧ r := by
+  constructor
+  any_goals constructor
+  any_goals assumption
+</code></pre>
+<p><code>by</code> 块下面的第一个策略是重复地分割连词：</p>
+<pre><code class="language-lean">example (p q r : Prop) (hp : p) (hq : q) (hr : r) :
+      p ∧ ((p ∧ q) ∧ r) ∧ (q ∧ r ∧ p) := by
+  repeat (any_goals constructor)
+  all_goals assumption
+</code></pre>
+<p>实际上，我们可以将完整的策略压缩为一行代码：</p>
+<pre><code class="language-lean">example (p q r : Prop) (hp : p) (hq : q) (hr : r) :
+      p ∧ ((p ∧ q) ∧ r) ∧ (q ∧ r ∧ p) := by
+  repeat (any_goals (first | constructor | assumption))
+</code></pre>
+<p>组合子 <code>focus t</code> 确保 <code>t</code> 只影响当前的目标，暂时隐藏其他目标。因此，如果 <code>t</code> 通常只影响当前目标，那么 <code>focus (all_goals t)</code> 的效果与 <code>t</code> 相同。</p>
+<h2 id="重写"><a class="header" href="#重写">重写</a></h2>
+<p><code>rewrite</code> 策略（简写为 <code>rw</code>）和 <code>simp</code> 策略在 <a href="./quantifiers_and_equality.html#calculational-proofs">Calculational Proofs</a> 中简要介绍过。在本节和下一节中，我们将更详细地讨论它们。</p>
+<p><code>rewrite</code> 策略提供了一种基本的机制，用于对目标和假设应用替换，方便且高效地处理等式。这个策略的最基本形式是 <code>rewrite [t]</code>，其中 <code>t</code> 是一个类型为等式的项。例如，<code>t</code> 可以是上下文中的一个假设 <code>h : x = y</code>，也可以是一个通用的引理，如 <code>add_comm : ∀ x y, x + y = y + x</code>，在这种情况下，rewrite 策略尝试找到适当的 <code>x</code> 和 <code>y</code> 的实例化；或者它可以是任何断言具体或通用等式的复合项。在下面的示例中，我们使用这种基本形式，使用一个假设来重写目标。</p>
+<pre><code class="language-lean">example (f : Nat → Nat) (k : Nat) (h₁ : f 0 = 0) (h₂ : k = 0) : f k = 0 := by
+  rw [h₂] -- replace k with 0
+  rw [h₁] -- replace f 0 with 0
+</code></pre>
+<p>在上面的例子中，第一次使用 <code>rw</code> 将目标 <code>f k = 0</code> 中的 <code>k</code> 替换为 <code>0</code>。然后，第二次使用将 <code>f 0</code> 替换为 <code>0</code>。该策略会自动关闭形如 <code>t = t</code> 的目标。下面是使用复合表达式进行重写的一个例子：</p>
+<pre><code class="language-lean">example (x y : Nat) (p : Nat → Prop) (q : Prop) (h : q → x = y)
+        (h' : p y) (hq : q) : p x := by
+  rw [h hq]; assumption
+</code></pre>
+<p>在这里，<code>h hq</code> 建立了方程 <code>x = y</code>。</p>
+<p>多个重写可以使用表示法<code>rw [t_1, ..., t_n]</code>进行组合，
+这只是 <code>rw [t_1]; ...; rw [t_n]</code> 的简写。前面的例子可以写成以下形式：</p>
+<pre><code class="language-lean">example (f : Nat → Nat) (k : Nat) (h₁ : f 0 = 0) (h₂ : k = 0) : f k = 0 := by
+  rw [h₂, h₁]
+</code></pre>
+<p>默认情况下，<code>rw</code>在前向推导中使用等式，将左手边与一个表达式匹配，并用右手边替换它。符号<code>←t</code>可以用来指示该策略在逆向推导中使用等式<code>t</code>。</p>
+<pre><code class="language-lean">example (f : Nat → Nat) (a b : Nat) (h₁ : a = b) (h₂ : f a = 0) : f b = 0 := by
+  rw [←h₁, h₂]
+</code></pre>
+<p>在这个例子中，术语 <code>←h₁</code> 指示重写器将 <code>b</code> 替换为 <code>a</code>。在编辑器中，您可以输入向后箭头 <code>\l</code>。您还可以使用 ascii 等价物 <code>&lt;-</code>。</p>
+<p>有时，恒等式的左侧能够与模式中的多个子项匹配，此时 <code>rw</code> 策略会在遍历表达式时选择第一个匹配项。如果这不是您想要的那个，请使用额外的参数来指定适当的子项。</p>
+<pre><code class="language-lean">example (a b c : Nat) : a + b + c = a + c + b := by
+  rw [Nat.add_assoc, Nat.add_comm b, ← Nat.add_assoc]
+
+example (a b c : Nat) : a + b + c = a + c + b := by
+  rw [Nat.add_assoc, Nat.add_assoc, Nat.add_comm b]
+
+example (a b c : Nat) : a + b + c = a + c + b := by
+  rw [Nat.add_assoc, Nat.add_assoc, Nat.add_comm _ b]
+</code></pre>
+<p>在上面的第一个例子中，第一步将 <code>a + b + c</code> 重写为 <code>a + (b + c)</code>。接下来的步骤将交换律应用于项 <code>b + c</code>；如果不指定参数，该策略会将 <code>a + (b + c)</code> 重写为 <code>(b + c) + a</code>。最后一步将逆向应用结合律，将 <code>a + (c + b)</code> 重写为 <code>a + c + b</code>。接下来的两个例子将结合律应用于双方，将括号移至右边，然后交换<code>b</code>和<code>c</code>。请注意，最后一个例子通过指定 <code>Nat.add_comm</code> 的第二个参数来指定重写应该在右侧进行。</p>
+<p>默认情况下，<code>rewrite</code> 策略只会影响目标。<code>rw [t] at h</code> 的符号将重写<code>t</code> 应用于假设<code>h</code>。</p>
+<pre><code class="language-lean">example (f : Nat → Nat) (a : Nat) (h : a + 0 = 0) : f a = f 0 := by
+  rw [Nat.add_zero] at h
+  rw [h]
+</code></pre>
+<p>第一步，<code>rw [Nat.add_zero] at h</code>，将假设 <code>a + 0 = 0</code> 重写为 <code>a = 0</code>。
+然后，使用新的假设 <code>a = 0</code> 将目标重写为 <code>f 0 = f 0</code>。</p>
+<p><code>rewrite</code> 策略不仅限于命题。
+在下面的例子中，我们使用 <code>rw [h] at t</code> 将假设 <code>t : Tuple α n</code> 重写为 <code>t : Tuple α 0</code>。</p>
+<pre><code class="language-lean">def Tuple (α : Type) (n : Nat) :=
+  { as : List α // as.length = n }
+
+example (n : Nat) (h : n = 0) (t : Tuple α n) : Tuple α 0 := by
+  rw [h] at t
+  exact t
+</code></pre>
+<h2 id="使用化简器"><a class="header" href="#使用化简器">使用化简器</a></h2>
+<p>而 <code>rewrite</code> 被设计为一个操作目标的手术工具，化简器则提供了一种更强大的自动化形式。Lean 库中的许多恒等式都被标记为 <code>[simp]</code> 属性，而 <code>simp</code> 策略则使用它们来迭代地重写表达式中的子项。</p>
+<pre><code class="language-lean">example (x y z : Nat) : (x + 0) * (0 + y * 1 + z * 0) = x * y := by
+  simp
+
+example (x y z : Nat) (p : Nat → Prop) (h : p (x * y))
+        : p ((x + 0) * (0 + y * 1 + z * 0)) := by
+  simp; assumption
+</code></pre>
+<p>在第一个例子中，目标中的等式左边被简化为使用涉及0和1的常见等式，将目标减少为<code>x * y = x * y</code>。此时，<code>simp</code>应用了自反性来完成它。在第二个例子中，<code>simp</code>将目标减少为<code>p (x * y)</code>，此时假设<code>h</code>完成它。以下是一些关于列表的额外例子：</p>
+<pre><code class="language-lean">open List
+
+example (xs : List Nat)
+        : reverse (xs ++ [1, 2, 3]) = [3, 2, 1] ++ reverse xs := by
+  simp
+
+example (xs ys : List α)
+        : length (reverse (xs ++ ys)) = length xs + length ys := by
+  simp [Nat.add_comm]
+</code></pre>
+<p>与<code>rw</code>一样，您可以使用关键字<code>at</code>来简化一个假设：</p>
+<pre><code class="language-lean">example (x y z : Nat) (p : Nat → Prop)
+        (h : p ((x + 0) * (0 + y * 1 + z * 0))) : p (x * y) := by
+  simp at h; assumption
+</code></pre>
+<p>此外，您可以使用“通配符”星号来简化所有的假设和目标证明：</p>
+<pre><code class="language-lean">attribute [local simp] Nat.mul_comm Nat.mul_assoc Nat.mul_left_comm
+attribute [local simp] Nat.add_assoc Nat.add_comm Nat.add_left_comm
+
+example (w x y z : Nat) (p : Nat → Prop)
+        (h : p (x * y + z * w * x)) : p (x * w * z + y * x) := by
+  simp at *; assumption
+
+example (x y z : Nat) (p : Nat → Prop)
+        (h₁ : p (1 * x + y)) (h₂ : p (x * z * 1))
+        : p (y + 0 + x) ∧ p (z * x) := by
+  simp at * &lt;;&gt; constructor &lt;;&gt; assumption
+</code></pre>
+<p>对于交换律和结合律可适用的操作，比如自然数的乘法，简化器使用这两个定理来重写表达式，以及<em>左交换律</em>。对于乘法操作来说，左交换律可以表示为：<code>x * (y * z) = y * (x * z)</code>。<em>local</em>修饰符告诉简化器在当前文件（或部分或命名空间）中使用这些规则。看起来交换律和左交换律可能会引发循环的问题。但是简化器可以检测到那些可以使它们的参数互换的恒等式，并使用一种被称为<em>有序重写</em>的技术。这意味着系统会维护一个内部的项排序，并且仅在应用恒等式后顺序会减少的情况下才使用它。对于上述提到的三个恒等式，这会使得表达式中所有的括号都与其右侧相关，并且表达式以一种规范（尽管有些主观）的方式进行排序。因此，关于结合性和交换性等价的两个表达式将被重写成相同的规范形式。</p>
+<pre><code class="language-lean"># attribute [local simp] Nat.mul_comm Nat.mul_assoc Nat.mul_left_comm
+# attribute [local simp] Nat.add_assoc Nat.add_comm Nat.add_left_comm
+example (w x y z : Nat) (p : Nat → Prop)
+        : x * y + z * w * x = x * w * z + y * x := by
+  simp
+
+example (w x y z : Nat) (p : Nat → Prop)
+        (h : p (x * y + z * w * x)) : p (x * w * z + y * x) := by
+  simp; simp at h; assumption
+</code></pre>
+<p>与 <code>rewrite</code> 类似，您可以向 <code>simp</code> 发送一个包含一般引理、局部假设、待展开的定义和复合表达式的事实列表。<code>simp</code> 策略还识别 <code>←t</code> 语法，就像 <code>rewrite</code> 一样。无论哪种情况，附加规则被添加到用于简化术语的标识集合中。</p>
+<pre><code class="language-lean">def f (m n : Nat) : Nat :=
+  m + n + m
+
+example {m n : Nat} (h : n = 1) (h' : 0 = m) : (f m n) = n := by
+  simp [h, ←h', f]
+</code></pre>
+<p>常见的一种方法是使用局部假设来简化目标：</p>
+<pre><code class="language-lean">example (f : Nat → Nat) (k : Nat) (h₁ : f 0 = 0) (h₂ : k = 0) : f k = 0 := by
+  simp [h₁, h₂]
+</code></pre>
+<p>当简化时使用在本地环境中出现的所有假设，我们可以使用通配符符号 <code>*</code> ：</p>
+<pre><code class="language-lean">example (f : Nat → Nat) (k : Nat) (h₁ : f 0 = 0) (h₂ : k = 0) : f k = 0 := by
+  simp [*]
+</code></pre>
+<p>下面是另一个例子：</p>
+<pre><code class="language-lean">example (u w x y z : Nat) (h₁ : x = y + z) (h₂ : w = u + x)
+        : w = z + y + u := by
+  simp [*, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+</code></pre>
+<p>简化器还会进行命题重写。例如，使用前提<code>p</code>，它将<code>p ∧ q</code>重写为<code>q</code>，将<code>p ∨ q</code>重写为<code>true</code>，然后通过简单证明来证明这些重写。重复这样的重写可以产生非平凡的命题推理。</p>
+<pre><code class="language-lean">example (p q : Prop) (hp : p) : p ∧ q ↔ q := by
+  simp [*]
+
+example (p q : Prop) (hp : p) : p ∨ q := by
+  simp [*]
+
+example (p q r : Prop) (hp : p) (hq : q) : p ∧ (q ∨ r) := by
+  simp [*]
+</code></pre>
+<p>下面的示例会简化所有的假设，然后使用它们来证明目标。</p>
+<pre><code class="language-lean">example (u w x x' y y' z : Nat) (p : Nat → Prop)
+        (h₁ : x + 0 = x') (h₂ : y + 0 = y')
+        : x + y + 0 = x' + y' := by
+  simp at *
+  simp [*]
+</code></pre>
+<p><strong>一件使得简化器特别有用的事情是它的功能可以随着库的发展而增长。举个例子，假设我们定义了一个列表操作，它通过将其输入的反向追加到结果中来将其对称化：</strong></p>
+<pre><code class="language-lean">def symmetrize {α : Type} : list α → list α
+| [] := []
+| (h::t) := (h::t) ++ (symmetrize t)
+</code></pre>
+<p><strong>This operation can be used to define the symmetric closure of a
+relation:</strong></p>
+<p><strong>这个操作可以用来定义一个关系的对称闭包：</strong></p>
+<pre><code class="language-lean">def symmetric_closure {α : Type} (r : α → α → Prop) : α → α → Prop :=
+λ a b, symmetrize [(a, b)] ⊆ r
+</code></pre>
+<p><strong>The definition of <code>symmetric_closure</code> makes use of the <code>symmetrize</code>
+operation to add all pairs of elements that are already related by <code>r</code>,
+as well as all pairs related by <code>r</code> in reverse order.</strong></p>
+<p><strong><code>symmetric_closure</code> 的定义使用了 <code>symmetrize</code> 操作，它通过添加所有在 <code>r</code> 中已经相关的元素对，以及所有按相反顺序相关的元素对，来生成对称闭包。</strong></p>
+<p><strong>In Lean, we can prove that <code>symmetric_closure</code> is indeed the
+smallest relation that is contained in <code>r</code> and is symmetric:</strong></p>
+<p><strong>在 Lean 中，我们可以证明 <code>symmetric_closure</code> 确实是包含在 <code>r</code> 中且对称的最小关系：</strong></p>
+<pre><code class="language-lean">lemma symmetric_closure_is_smallest {α : Type} (r : α → α → Prop)
+(sr : symmetric_closure r ≤ r)
+(h : symmetric r)
+: symmetric_closure r ≤ r :=
+begin
+  intros a b hab,
+  cases hab with hb hr,
+  { exact sr hb },
+  { have hba : (b, a) ∈ symmetric_closure r,
+    { rw symmetrize_append,
+      apply mem_union_right,
+      exact hr },
+    exact sr hba }
+end
+</code></pre>
+<p><strong>The proof starts by assuming that <code>symmetric_closure r</code> is already a
+subset of <code>r</code>. Then, for any pair of elements <code>a</code> and <code>b</code> that are in
+<code>symmetric_closure r</code>, we need to show that <code>a</code> and <code>b</code> are related by
+<code>r</code>. We consider two cases:</strong></p>
+<p><strong>证明首先假设 <code>symmetric_closure r</code> 已经是 <code>r</code> 的子集。然后，对于任意在 <code>symmetric_closure r</code> 中的元素对 <code>a</code> 和 <code>b</code>，我们需要证明 <code>a</code> 和 <code>b</code> 是由 <code>r</code> 相关的。我们分两种情况讨论：</strong></p>
+<ul>
+<li><strong>If <code>a</code> and <code>b</code> are already related by <code>r</code>, then we can directly
+conclude that <code>a</code> and <code>b</code> are related by <code>r</code>.</strong></li>
+</ul>
+<p><strong>如果 <code>a</code> 和 <code>b</code> 已经由 <code>r</code> 相关，则我们可以直接得出 <code>a</code> 和 <code>b</code> 是由 <code>r</code> 相关的。</strong></p>
+<ul>
+<li><strong>If <code>a</code> and <code>b</code> are not related by <code>r</code>, then we need to show that
+<code>(b, a)</code> is in <code>symmetric_closure r</code>. This can be done by applying
+the symmetrize operation to the pair <code>(a, b)</code> and using the fact that
+<code>r</code> is symmetric.</strong></li>
+</ul>
+<p><strong>如果 <code>a</code> 和 <code>b</code> 没有被 <code>r</code> 相关，则我们需要证明 <code>(b, a)</code> 在 <code>symmetric_closure r</code> 中。这可以通过对元素对 <code>(a, b)</code> 应用 symmetrize 操作，并利用 <code>r</code> 是对称的事实来完成。</strong></p>
+<pre><code class="language-lean">def mk_symm (xs : List α) :=
+  xs ++ xs.reverse
+</code></pre>
+<p>对于任意列表 <code>xs</code>，<code>reverse (mk_symm xs)</code> 等于 <code>mk_symm xs</code>，可以通过展开定义很容易证明：</p>
+<pre><code class="language-lean">lemma reverse_mk_symm {α : Type*} (xs : list α) :
+  reverse (mk_symm xs) = mk_symm xs :=
+begin
+  -- 使用反转的定义展开目标
+  unfold reverse,
+  -- 我们需要对被反转的列表进行归纳
+  induction xs with x xs ih,
+  -- Base case: 空列表
+  { refl },
+  -- Inductive case: xs = x :: xs
+  -- 我们需要简化（simplification）来处理理论项
+  { simp only [mk_symm_cons, reverse_append, ih],
+    -- 在获得感兴趣的等式之前简化，这里是反转一个列表的等式
+    rw [reverse_singleton, append_nil] }
+end
+</code></pre>
+<p>因此，我们通过对定义进行展开和归纳来证明这个结论。</p>
+<pre><code class="language-lean"># def mk_symm (xs : List α) :=
+#  xs ++ xs.reverse
+theorem reverse_mk_symm (xs : List α)
+        : (mk_symm xs).reverse = mk_symm xs := by
+  simp [mk_symm]
+</code></pre>
+<p>我们现在可以使用该定理来证明新的结果：</p>
+<pre><code class="language-lean"># def mk_symm (xs : List α) :=
+#  xs ++ xs.reverse
+# theorem reverse_mk_symm (xs : List α)
+#        : (mk_symm xs).reverse = mk_symm xs := by
+#  simp [mk_symm]
+example (xs ys : List Nat)
+        : (xs ++ mk_symm ys).reverse = mk_symm ys ++ xs.reverse := by
+  simp [reverse_mk_symm]
+
+example (xs ys : List Nat) (p : List Nat → Prop)
+        (h : p (xs ++ mk_symm ys).reverse)
+        : p (mk_symm ys ++ xs.reverse) := by
+  simp [reverse_mk_symm] at h; assumption
+</code></pre>
+<p>但通常情况下，使用 <code>reverse_mk_symm</code> 是正确的做法，如果用户不必显式地调用它会很方便。你可以通过在定义定理时将其标记为简化规则来实现这一点：</p>
+<pre><code class="language-lean"># def mk_symm (xs : List α) :=
+#  xs ++ xs.reverse
+@[simp] theorem reverse_mk_symm (xs : List α)
+        : (mk_symm xs).reverse = mk_symm xs := by
+  simp [mk_symm]
+
+example (xs ys : List Nat)
+        : (xs ++ mk_symm ys).reverse = mk_symm ys ++ xs.reverse := by
+  simp
+
+example (xs ys : List Nat) (p : List Nat → Prop)
+        (h : p (xs ++ mk_symm ys).reverse)
+        : p (mk_symm ys ++ xs.reverse) := by
+  simp at h; assumption
+</code></pre>
+<p>符号<code>@[simp]</code>声明<code>reverse_mk_symm</code>具有<code>[simp]</code>属性，并可以更明确地拼写出来：</p>
+<pre><code class="language-lean"># def mk_symm (xs : List α) :=
+#  xs ++ xs.reverse
+theorem reverse_mk_symm (xs : List α)
+        : (mk_symm xs).reverse = mk_symm xs := by
+  simp [mk_symm]
+
+attribute [simp] reverse_mk_symm
+
+example (xs ys : List Nat)
+        : (xs ++ mk_symm ys).reverse = mk_symm ys ++ xs.reverse := by
+  simp
+
+example (xs ys : List Nat) (p : List Nat → Prop)
+        (h : p (xs ++ mk_symm ys).reverse)
+        : p (mk_symm ys ++ xs.reverse) := by
+  simp at h; assumption
+</code></pre>
+<p>定理的属性可以在定理声明之后的任何时间应用：</p>
+<pre><code class="language-lean"># def mk_symm (xs : List α) :=
+#  xs ++ xs.reverse
+theorem reverse_mk_symm (xs : List α)
+        : (mk_symm xs).reverse = mk_symm xs := by
+  simp [mk_symm]
+
+example (xs ys : List Nat)
+        : (xs ++ mk_symm ys).reverse = mk_symm ys ++ xs.reverse := by
+  simp [reverse_mk_symm]
+
+attribute [simp] reverse_mk_symm
+
+example (xs ys : List Nat) (p : List Nat → Prop)
+        (h : p (xs ++ mk_symm ys).reverse)
+        : p (mk_symm ys ++ xs.reverse) := by
+  simp at h; assumption
+</code></pre>
+<p>然而，一旦属性被应用，就没有办法永久地移除它；它会在引入该属性所在文件的任何文件中保持存在。正如我们将在<a href="./interacting_with_lean.html#attributes">属性</a>一节中进一步讨论的那样，可以使用<code>local</code>修饰符将属性的作用域限定为当前文件或部分。</p>
+<pre><code class="language-lean"># def mk_symm (xs : List α) :=
+#  xs ++ xs.reverse
+theorem reverse_mk_symm (xs : List α)
+        : (mk_symm xs).reverse = mk_symm xs := by
+  simp [mk_symm]
+
+section
+attribute [local simp] reverse_mk_symm
+
+example (xs ys : List Nat)
+        : (xs ++ mk_symm ys).reverse = mk_symm ys ++ xs.reverse := by
+  simp
+
+example (xs ys : List Nat) (p : List Nat → Prop)
+        (h : p (xs ++ mk_symm ys).reverse)
+        : p (mk_symm ys ++ xs.reverse) := by
+  simp at h; assumption
+end
+</code></pre>
+<p>在该部分之外，简化器将不再默认使用 <code>reverse_mk_sym</code>。</p>
+<p>请注意，我们讨论的各种 <code>simp</code> 选项 -- 给出一个明确的规则列表，使用 <code>at</code> 来指定位置 -- 可以结合使用，但它们列出的顺序是固定的。在编辑器中，您可以通过将光标置于 <code>simp</code> 标识符上以查看与之关联的文档字符串来查看正确的顺序。</p>
+<p>还有两个有用的修饰符。默认情况下，<code>simp</code> 包含了所有使用 <code>[simp]</code> 属性标记过的定理。使用 <code>simp only</code> 可以排除这些默认规则，允许您使用更明确的规则列表。在下面的示例中，减号和 <code>only</code> 被用来阻止应用 <code>reverse_mk_sym</code>。</p>
+<pre><code class="language-lean">def mk_symm (xs : List α) :=
+  xs ++ xs.reverse
+@[simp] theorem reverse_mk_symm (xs : List α)
+        : (mk_symm xs).reverse = mk_symm xs := by
+  simp [mk_symm]
+
+example (xs ys : List Nat) (p : List Nat → Prop)
+        (h : p (xs ++ mk_symm ys).reverse)
+        : p (mk_symm ys ++ xs.reverse) := by
+  simp at h; assumption
+
+example (xs ys : List Nat) (p : List Nat → Prop)
+        (h : p (xs ++ mk_symm ys).reverse)
+        : p ((mk_symm ys).reverse ++ xs.reverse) := by
+  simp [-reverse_mk_symm] at h; assumption
+
+example (xs ys : List Nat) (p : List Nat → Prop)
+        (h : p (xs ++ mk_symm ys).reverse)
+        : p ((mk_symm ys).reverse ++ xs.reverse) := by
+  simp only [List.reverse_append] at h; assumption
+</code></pre>
+<p><code>simp</code>策略有许多配置选项。例如，我们可以通过以下方式启用上下文简化。</p>
+<pre><code class="language-lean">example : if x = 0 then y + x = y else x ≠ 0 := by
+  simp (config := { contextual := true })
+</code></pre>
+<p>当 <code>contextual := true</code> 时，当简化 <code>y + x = y</code> 时，<code>simp</code> 使用了 <code>x = 0</code> 这一事实，而在简化另一分支时使用了 <code>x ≠ 0</code>。这里是另一个例子。</p>
+<pre><code class="language-lean">import data.complex.basic
+
+theorem complex.mul_zero (a : ℂ) : a * 0 = 0 :=
+begin
+  simp,
+end
+</code></pre>
+<p>这个定理表明对于任意复数 <code>a</code>，<code>a * 0</code> 等于 <code>0</code>。在证明过程中，我们使用了 <code>simp</code> 策略，并设置 <code>contextual := true</code>。这样一来，在简化 <code>a * 0</code> 的过程中，<code>simp</code> 会使用 <code>0 = 0 * 0</code> 这一事实，从而将 <code>a * 0</code> 简化为 <code>0</code>。</p>
+<pre><code class="language-lean">example : ∀ (x : Nat) (h : x = 0), y + x = y := by
+  simp (config := { contextual := true })
+</code></pre>
+<p>另一个有用的配置选项是 <code>arith := true</code>，它可以启用算术化简。它非常有用，以至于 <code>simp_arith</code> 是 <code>simp (config := { arith := true })</code> 的缩写。</p>
+<pre><code class="language-lean">example : 0 &lt; 1 + x ∧ x + y + 2 ≥ y + 1 := by
+  simp_arith
+</code></pre>
+<h2 id="分割策略"><a class="header" href="#分割策略">分割策略</a></h2>
+<p><code>split</code> 策略适用于拆分嵌套的 <code>if-then-else</code> 和 <code>match</code> 表达式。对于一个具有 <code>n</code> 个 case 的 <code>match</code> 表达式，<code>split</code> 策略最多生成 <code>n</code> 个子目标。下面是一个例子。</p>
+<pre><code class="language-lean">def f (x y z : Nat) : Nat :=
+  match x, y, z with
+  | 5, _, _ =&gt; y
+  | _, 5, _ =&gt; y
+  | _, _, 5 =&gt; y
+  | _, _, _ =&gt; 1
+
+example (x y z : Nat) : x ≠ 5 → y ≠ 5 → z ≠ 5 → z = w → f x y w = 1 := by
+  intros
+  simp [f]
+  split
+  . contradiction
+  . contradiction
+  . contradiction
+  . rfl
+</code></pre>
+<p>我们可以将上述证明的策略压缩如下。</p>
+<pre><code>Proof.
+  intros H.
+  induction H as [x Hx|y Hy Hz].
+  - apply Hx.
+  - apply Hy.
+Defined.
+</code></pre>
+<p>Proof.(证明)
+intros H.
+induction H as [x Hx|y Hy Hz].</p>
+<ul>
+<li>apply Hx.</li>
+<li>apply Hy.
+Defined.</li>
+</ul>
+<pre><code class="language-lean"># def f (x y z : Nat) : Nat :=
+#  match x, y, z with
+#  | 5, _, _ =&gt; y
+#  | _, 5, _ =&gt; y
+#  | _, _, 5 =&gt; y
+#  | _, _, _ =&gt; 1
+example (x y z : Nat) : x ≠ 5 → y ≠ 5 → z ≠ 5 → z = w → f x y w = 1 := by
+  intros; simp [f]; split &lt;;&gt; first | contradiction | rfl
+</code></pre>
+<p>策略 <code>split &lt;;&gt; first | contradiction | rfl</code> 首先应用 <code>split</code> 策略，
+然后对于每个生成的子目标，尝试 <code>contradiction</code>，如果 <code>contradiction</code> 失败，则尝试 <code>rfl</code>。
+和 <code>simp</code> 类似，我们可以将 <code>split</code> 应用于特定的假设。</p>
+<pre><code class="language-lean">def g (xs ys : List Nat) : Nat :=
+  match xs, ys with
+  | [a, b], _ =&gt; a+b+1
+  | _, [b, c] =&gt; b+1
+  | _, _      =&gt; 1
+
+example (xs ys : List Nat) (h : g xs ys = 0) : False := by
+  simp [g] at h; split at h &lt;;&gt; simp_arith at h
+</code></pre>
+<p><strong>可扩展的策略</strong></p>
+<p>在下面的例子中，我们使用<code>syntax</code>命令来定义<code>triv</code>符号。然后，我们使用<code>macro_rules</code>命令来指定在使用<code>triv</code>时应该执行哪些操作。你可以提供不同的展开方式，策略解释器将尝试它们直到找到一个成功的。</p>
+<pre><code class="language-lean">-- Define a new tactic notation
+syntax &quot;triv&quot; : tactic
+
+macro_rules
+  | `(tactic| triv) =&gt; `(tactic| assumption)
+
+example (h : p) : p := by
+  triv
+
+-- You cannot prove the following theorem using `triv`
+-- example (x : α) : x = x := by
+--  triv
+
+-- Let's extend `triv`. The tactic interpreter
+-- tries all possible macro extensions for `triv` until one succeeds
+macro_rules
+  | `(tactic| triv) =&gt; `(tactic| rfl)
+
+example (x : α) : x = x := by
+  triv
+
+example (x : α) (h : p) : x = x ∧ p := by
+  apply And.intro &lt;;&gt; triv
+
+-- We now add a (recursive) extension
+macro_rules | `(tactic| triv) =&gt; `(tactic| apply And.intro &lt;;&gt; triv)
+
+example (x : α) (h : p) : x = x ∧ p := by
+  triv
+</code></pre>
+<h2 id="习题"><a class="header" href="#习题">习题</a></h2>
+<ol>
+<li>
+<p>回到 <a href="./propositions_and_proofs.html">Chapter Propositions and Proofs</a> 和 <a href="./quantifiers_and_equality.html">Chapter Quantifiers and Equality</a>，尽量用策略证明重新做一遍已有的习题，使用适当的 <code>rw</code> 和 <code>simp</code>。</p>
+</li>
+<li>
+<p>使用策略组合器获得以下命题的一行证明：</p>
+</li>
+</ol>
+<pre><code class="language-lean">example (p q r : Prop) (hp : p)
+        : (p ∨ q ∨ r) ∧ (q ∨ p ∨ r) ∧ (q ∨ r ∨ p) := by
+  admit
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="quantifiers_and_equality.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="interacting_with_lean.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="quantifiers_and_equality.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="interacting_with_lean.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

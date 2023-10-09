@@ -1,0 +1,901 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>公理和计算 - Theorem Proving in Lean 4</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="title_page.html">Lean 4中的定理证明</a></li><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> 引言</a></li><li class="chapter-item expanded "><a href="dependent_type_theory.html"><strong aria-hidden="true">2.</strong> 依赖类型论</a></li><li class="chapter-item expanded "><a href="propositions_and_proofs.html"><strong aria-hidden="true">3.</strong> 命题和证明</a></li><li class="chapter-item expanded "><a href="quantifiers_and_equality.html"><strong aria-hidden="true">4.</strong> 量词和相等</a></li><li class="chapter-item expanded "><a href="tactics.html"><strong aria-hidden="true">5.</strong> 策略</a></li><li class="chapter-item expanded "><a href="interacting_with_lean.html"><strong aria-hidden="true">6.</strong> 与Lean交互</a></li><li class="chapter-item expanded "><a href="inductive_types.html"><strong aria-hidden="true">7.</strong> 归纳类型</a></li><li class="chapter-item expanded "><a href="induction_and_recursion.html"><strong aria-hidden="true">8.</strong> 归纳和递归</a></li><li class="chapter-item expanded "><a href="structures_and_records.html"><strong aria-hidden="true">9.</strong> 结构和记录</a></li><li class="chapter-item expanded "><a href="type_classes.html"><strong aria-hidden="true">10.</strong> 类型类</a></li><li class="chapter-item expanded "><a href="conv.html"><strong aria-hidden="true">11.</strong> 转化策略模式</a></li><li class="chapter-item expanded "><a href="axioms_and_computation.html" class="active"><strong aria-hidden="true">12.</strong> 公理和计算</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Theorem Proving in Lean 4</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/RexWzh/theorem_proving_in_lean4" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="公理和计算"><a class="header" href="#公理和计算">公理和计算</a></h1>
+<p>我们已经看到 Lean 中实现的构造演算版本包括依赖函数类型（dependent function types）、带有归纳类型（inductive types）和从底部开始具有不可证明谓词（proof-irrelevant <code>Prop</code>）的等级层级的宇宙。在本章中，我们考虑通过添加附加公理和规则来扩展 CIC。以这种方式扩展基础系统通常是方便的，它可以使得证明更多定理成为可能，也可以使证明定理变得更容易，而这些定理否则可能无法证明。但添加附加公理可能带来负面后果，这些后果可能超出对其正确性的担忧。特别地，公理的使用与定义和定理的计算内容相关，我们将在此进行探讨。</p>
+<p>Lean 被设计用于支持计算和经典的推理。倾向于&quot;计算纯净&quot;（computationally pure）的用户可以坚持使用一个能够确保系统中的封闭表达式求值到规范形式的片段。特别地，例如，任何具有类型 <code>Nat</code> 的计算纯净封闭表达式将归约为一个数字。</p>
+<p>Lean 的标准库定义了一个附加公理，即命题等值性（propositional extensionality），以及一个因此导致函数等值性原理的商数构建（quotient construction）。这些扩展可以用于开发集合和有限集的理论。我们将在下面看到，使用这些定理可能会阻止 Lean 内核中的求值，以至于类型为 <code>Nat</code> 的封闭项不再计算为数字。但 Lean 在将定义编译为其虚拟机求值器的字节码时会擦除类型和命题信息，由于这些公理只会添加新的命题，所以它们与计算解释是兼容的。即使是对计算感兴趣的用户，也可能希望使用排中律来推理计算。这也会阻止核心求值，但它与编译为字节码是兼容的。</p>
+<p>标准库还定义了完全与计算解释相敌对的选择公理，因为它从一个断言其存在的命题中神奇地产生&quot;数据&quot;。在某些经典建设中，其使用是必不可少的，用户可以在需要时导入它。但使用此构造生成的表达式会阻止计算。
+在 Lean 中，数据没有计算内容，我们需要标记这些定义为<code>noncomputable</code>来说明这一点。</p>
+<p>通过一个聪明的技巧（称为 Diaconescu 定理），可以使用命题外延性、函数外延性和选择公理推导出排中律。然而，正如上面所提到的，使用排中律仍然与字节码编译和代码抽取兼容，正如其他经典原则一样，只要它们不被用于制造数据。</p>
+<p>因此，在宇宙、依赖函数类型和归纳类型的基本框架之上，标准库还添加了三个额外的组件：</p>
+<ul>
+<li>命题外延性公理</li>
+<li>商集构造，它意味着函数外延性</li>
+<li>选择原则，它从一个存在的命题中生成数据。</li>
+</ul>
+<p>前两者会阻止 Lean 中的规范化，但与字节码求值兼容，而第三者则不能进行计算解释。下面我们将更详细地讨论这些细节。</p>
+<h2 id="历史和哲学背景"><a class="header" href="#历史和哲学背景">历史和哲学背景</a></h2>
+<p>在大部分历史上，数学本质上是计算的：几何处理几何对象的构造，代数处理方程组的算法解法，分析提供计算随时间演化的系统未来行为的方法。从一个定理的证明到“对于每个<code>x</code>，都存在<code>y</code>使得...”的效果，通常可以直接提取一个算法来计算给定<code>x</code>的这样一个<code>y</code>。</p>
+<p>然而，19世纪，数学论证的复杂性增加，迫使数学家们开发新的推理风格，抑制算法信息并引用数学对象的描述，将这些对象的细节抽象化。目标是获得强大的“概念性”理解，而不会陷入计算细节，但这导致了一些在直接计算阅读上简直是<em>错误</em>的数学定理的产生。</p>
+<p>即使在今天，人们普遍认可计算对数学的重要性。但是对于如何最好地解决计算问题，存在不同的观点。从一种<em>构造性</em>的观点来看，将数学与其计算根源分离是一个错误；每个有意义的数学定理都应该具有直接的计算表达。
+计算解释。从 <em>经典</em> 角度来看，保持关注点的分离是更有成效的：我们可以使用一种语言和一套方法来编写计算机程序，同时保持使用非构造性理论和方法对其进行推理的自由。Lean被设计用于支持这两种方法。库的核心部分是根据构造性开发的，但系统也提供了支持进行经典数学推理的功能。</p>
+<p>从计算的角度来看，依赖类型理论的最纯净的部分完全避免使用<code>Prop</code>。归纳类型和依赖函数类型可以被视为数据类型，并且可以通过应用规约规则来“评估”这些类型的项，直到无法再应用规则为止。原则上，任何类型为<code>Nat</code>的封闭项（即没有自由变量的项）应该被评估为一个数字，即<code>succ (... (succ zero)...)</code>。</p>
+<p>引入不受证明影响的<code>Prop</code>并将定理标记为不可约是关注点分离的第一步。意图是类型<code>p : Prop</code>的元素在计算中不起任何作用，因此在这个意义上，一个项<code>t : p</code>的具体构造是“无关紧要”的。仍然可以定义包含类型<code>Prop</code>元素的计算对象；关键是这些元素可以帮助我们推理计算的影响，但在我们从项中提取“代码”时可以忽略它们。类型为<code>Prop</code>的元素并非完全无害，它们包括等式<code>s = t : α</code>，其中<code>α</code>是任意类型，这些等式可以用作转换，以类型检查项。在下面，我们将看到这些转换如何阻塞系统中的计算。但是，在一个擦除命题内容、忽略中间类型约束并将项规约到正规形式的评估方案下仍然可以进行计算。这正是Lean的虚拟机所做的。</p>
+<h2>在采用不受证明影响的<code>Prop</code>之后，我们可能认为使用排中律定律，即<code>p ∨ ¬p</code>（其中<code>p</code>是任意命题）是合理的。当然，这也可能阻塞计算。
+命题展开性</h2>
+<p>命题展开性是以下的公理：</p>
+<pre><code>extensionalityP : Π {P Q : Prop} → (P ↔ Q) → P ≡ Q
+extensionalityP (P ↔ Q) = logical-equivalence-extensionality (logically-upward-! P Q) (logically-downward-! P Q)
+</code></pre>
+<p>其中，<code>Π</code> 表示依赖函数类型，<code>Prop</code> 表示命题类型。</p>
+<p>命题展开性公理表明，如果命题 <code>P</code> 和 <code>Q</code> 互相等价（即，它们之间有双向的逻辑等价关系），则 <code>P</code> 和 <code>Q</code> 是相等的。</p>
+<p>这一公理的证明依赖于逻辑等价性的展开性公理，具体地说就是 <code>logically-upward-!</code> 和 <code>logically-downward-!</code> 函数。这两个函数分别根据逻辑等价关系的定义将相应的命题进一步展开成对应的逻辑关系。在 Coq 语言中，使用 <code>≡</code> 符号表示两个命题的相等关系。</p>
+<p>命题展开性公理的引入使得在 Coq 语言中可以使用等价符号（↔）来表示命题的双向逻辑等价关系，从而更加直观地描述和推理命题的逻辑关系。</p>
+<pre><code class="language-lean"># namespace Hidden
+axiom propext {a b : Prop} : (a ↔ b) → a = b
+# end Hidden
+</code></pre>
+<p>它断言当两个命题相互蕴含时，它们实际上是相等的。这与集合论解释一致，在该解释中，任何元素 <code>a: Prop</code> 要么为空，要么是一个有着某个特殊元素 <code>*</code> 的单元素集 <code>{*}</code>。这个公理的效果是，在任何情况下，等价的命题可以相互替代：</p>
+<pre><code class="language-lean">theorem thm₁ (a b c d e : Prop) (h : a ↔ b) : (c ∧ a ∧ d → e) ↔ (c ∧ b ∧ d → e) :=
+  propext h ▸ Iff.refl _
+
+theorem thm₂ (a b : Prop) (p : Prop → Prop) (h : a ↔ b) (h₁ : p a) : p b :=
+  propext h ▸ h₁
+</code></pre>
+<h2 id="函数的等值性扩展性"><a class="header" href="#函数的等值性扩展性">函数的等值性扩展性</a></h2>
+<p>类似于命题的等值性扩展性，函数的等值性扩展性断言了任意两个类型为 <code>(x : α) → β x</code> 的函数，如果它们在所有的输入上保持一致，那么它们是相等的。</p>
+<pre><code class="language-lean">universe u v
+#check (@funext :
+           {α : Type u}
+         → {β : α → Type u}
+         → {f g : (x : α) → β x}
+         → (∀ (x : α), f x = g x)
+         → f = g)
+
+#print funext
+</code></pre>
+<p>从经典的集合论的角度来看，这正是两个函数相等的意思。这被称为“外延”的函数观点。然而，从构造的角度来看，有时更自然地将函数看作算法或者以某种显式方式呈现的计算机程序。当然，两个计算机程序可能在每个输入上计算出相同的答案，尽管它们在语法上非常不同。以类似的方式，你可能希望保持一种函数观点，而不将拥有相同输入/输出行为的函数等同起来。这被称为“内涵”的函数观点。</p>
+<p>实际上，函数外延性是从商集存在性推导出来的，我们将在下一节中描述。在 Lean 标准库中，因此<code>funext</code>是从商构造中
+<a href="https://github.com/leanprover/lean4/blob/master/src/Init/Core.lean">通过证明</a>。</p>
+<p>假设对于<code>α : Type</code>，我们定义<code>Set α := α → Prop</code>来表示<code>α</code>的子集的类型，基本上将子集与谓词等同起来。通过结合<code>funext</code>和<code>propext</code>，我们得到这种集合的外延理论：</p>
+<pre><code class="language-lean">def Set (α : Type u) := α → Prop
+
+namespace Set
+
+def mem (x : α) (a : Set α) := a x
+
+infix:50 (priority := high) &quot;∈&quot; =&gt; mem
+
+theorem setext {a b : Set α} (h : ∀ x, x ∈ a ↔ x ∈ b) : a = b :=
+  funext (fun x =&gt; propext (h x))
+
+end Set
+</code></pre>
+<p>我们可以接着定义空集和集合的交集，然后证明集合恒等式：</p>
+<pre><code class="language-lean"># def Set (α : Type u) := α → Prop
+# namespace Set
+# def mem (x : α) (a : Set α) := a x
+# infix:50 (priority := high) &quot;∈&quot; =&gt; mem
+# theorem setext {a b : Set α} (h : ∀ x, x ∈ a ↔ x ∈ b) : a = b :=
+#   funext (fun x =&gt; propext (h x))
+def empty : Set α := fun x =&gt; False
+
+notation (priority := high) &quot;∅&quot; =&gt; empty
+
+def inter (a b : Set α) : Set α :=
+  fun x =&gt; x ∈ a ∧ x ∈ b
+
+infix:70 &quot; ∩ &quot; =&gt; inter
+
+theorem inter_self (a : Set α) : a ∩ a = a :=
+  setext fun x =&gt; Iff.intro
+    (fun ⟨h, _⟩ =&gt; h)
+    (fun h =&gt; ⟨h, h⟩)
+
+theorem inter_empty (a : Set α) : a ∩ ∅ = ∅ :=
+  setext fun x =&gt; Iff.intro
+    (fun ⟨_, h⟩ =&gt; h)
+    (fun h =&gt; False.elim h)
+
+theorem empty_inter (a : Set α) : ∅ ∩ a = ∅ :=
+  setext fun x =&gt; Iff.intro
+    (fun ⟨h, _⟩ =&gt; h)
+    (fun h =&gt; False.elim h)
+
+theorem inter.comm (a b : Set α) : a ∩ b = b ∩ a :=
+  setext fun x =&gt; Iff.intro
+    (fun ⟨h₁, h₂⟩ =&gt; ⟨h₂, h₁⟩)
+    (fun ⟨h₁, h₂⟩ =&gt; ⟨h₂, h₁⟩)
+# end Set
+</code></pre>
+<p>下面是一个示例，展示了函数外延性如何阻碍 Lean 内核中的计算。</p>
+<pre><code class="language-lean">open function
+
+-- define a new constant with a complicated computation rule
+constant f : ℕ → bool
+constant hf : ∀ n, f n = tt
+
+-- define a new constant with a simpler definition
+constant g : ℕ → bool
+constant hg : ∀ n, g n = tt
+
+-- define a new function using the function extensionality axiom
+def h : ℕ → bool :=
+λ n, if f n = tt then tt else g n
+
+-- the following lemma shows that h n = tt for all n
+-- 
+-- the proof does not directly match any constructor, and needs to apply function extensionality somewhere
+lemma hn_tt : ∀ n, h n = tt :=
+by {
+  intro n,
+  rw h,
+  -- if h n is not equal to tt as a term, then it must have been constructed using the else branch
+  -- in this case, f n must be false, so obtain a contradiction
+  by_contradiction hneq,
+  simp at hneq,
+  exact (hf n).symm.trans hneq,
+}
+</code></pre>
+<p>在这个例子中，我们假设有一个函数 <code>f</code> 和一个函数 <code>g</code> ，它们都接受一个自然数作为输入，并返回一个布尔值。我们使用函数外延性公理定义了一个新的函数 <code>h</code> ，它根据 <code>f n</code> 的结果决定返回 <code>tt</code> 还是根据 <code>g n</code> 的结果返回 <code>tt</code> 。</p>
+<p>引理 <code>hn_tt</code> 用于证明对于所有的自然数 <code>n</code> ，<code>h n</code> 等于 <code>tt</code> 。为了证明这个引理，我们首先对 <code>h</code> 进行了简化。如果 <code>h n</code> 不等于 <code>tt</code> ，那么它只能是使用了 <code>else</code> 分支进行构造。在这种情况下，<code>f n</code> 必须为假，从而产生矛盾。因此，我们可以得出结论 <code>h n = tt</code> 。</p>
+<pre><code class="language-lean">def f (x : Nat) := x
+def g (x : Nat) := 0 + x
+
+theorem f_eq_g : f = g :=
+  funext fun x =&gt; (Nat.zero_add x).symm
+
+def val : Nat :=
+  Eq.recOn (motive := fun _ _ =&gt; Nat) f_eq_g 0
+
+-- does not reduce to 0
+#reduce val
+
+-- evaluates to 0
+#eval val
+</code></pre>
+<p>首先，我们使用函数等价性证明了两个函数 <code>f</code> 和 <code>g</code> 相等，然后我们通过在类型中将 <code>f</code> 替换为 <code>g</code>，将 <code>0</code> 转化为类型 <code>Nat</code>。当然，这个转化是没有实际作用的，因为 <code>Nat</code> 并不依赖于 <code>f</code>。但是这已经足够造成问题了：根据系统的计算规则，我们现在有了一个闭合的 <code>Nat</code> 类型的项，它不能被简化成一个数值。在这种情况下，我们可能会尝试将表达式简化为 <code>0</code>。但在非平凡的例子中，消除转换会改变项的类型，这可能导致环境表达式的类型不正确。然而，虚拟机在求值表达式为 <code>0</code> 时并不会出现问题。下面是一个类似的人为例子，展示了 <code>propext</code> 可能产生的问题。</p>
+<pre><code class="language-lean">theorem tteq : (True ∧ True) = True :=
+  propext (Iff.intro (fun ⟨h, _⟩ =&gt; h) (fun h =&gt; ⟨h, h⟩))
+
+def val : Nat :=
+  Eq.recOn (motive := fun _ _ =&gt; Nat) tteq 0
+
+-- does not reduce to 0
+#reduce val
+
+-- evaluates to 0
+#eval val
+</code></pre>
+<p>当前的研究项目，包括对<em>观察型理论</em>和<em>立方型理论</em>的研究，旨在以允许对涉及函数外延性、商以及其他类型的约简方式扩展类型理论。但解决方案并不是那么明确，而且 Lean 的基础计算规则并不支持这样的约简。</p>
+<p>从某种意义上说，类型转换不会改变表达式的含义。相反，它是一种用于推理表达式类型的机制。在合适的语义下，将项按保持其含义的方式约简是有意义的，可以忽略用于使约简类型正确的中间簿记。在这种情况下，向&quot;Prop&quot;中添加新的公理并不重要；根据证明的不相关性，&quot;Prop&quot;中的表达式不携带信息，可以安全地被约简过程忽略。</p>
+<h2 id="商集"><a class="header" href="#商集">商集</a></h2>
+<p>设<code>α</code>为任意类型，<code>r</code>是<code>α</code>上的等价关系。在数学中通常形成&quot;商集&quot;<code>α / r</code>，即&quot;模&quot;<code>r</code>的<code>α</code>的元素的类型。从集合论的角度来看，可以将<code>α / r</code>视为<code>α</code>的<code>r</code>等价类的集合。如果<code>f: α → β</code>是任意一个满足对每个<code>x y: α</code>都有<code>r x y</code>推出<code>f x = f y</code>的函数，那么<code>f</code>&quot;映射&quot;到一个函数<code>f' : α / r → β</code>，通过对每个等价类<code>⟦x⟧</code>定义<code>f' ⟦x⟧ = f x</code>。Lean 的标准库通过添加额外的常量来执行这些构造，将这个最后的等式作为定义约简规则。</p>
+<p>在最基本的形式中，商集构造甚至不需要<code>r</code>是一个等价关系。以下常量内置于 Lean 中：</p>
+<pre><code class="language-lean"># namespace Hidden
+universe u v
+
+axiom Quot : {α : Sort u} → (α → α → Prop) → Sort u
+
+axiom Quot.mk : {α : Sort u} → (r : α → α → Prop) → α → Quot r
+
+axiom Quot.ind :
+    ∀ {α : Sort u} {r : α → α → Prop} {β : Quot r → Prop},
+      (∀ a, β (Quot.mk r a)) → (q : Quot r) → β q
+
+axiom Quot.lift :
+    {α : Sort u} → {r : α → α → Prop} → {β : Sort u} → (f : α → β)
+    → (∀ a b, r a b → f a = f b) → Quot r → β
+# end Hidden
+</code></pre>
+<p>第一个定理是根据类型<code>α</code>上的任何二元关系<code>r</code>，形成类型<code>Quot r</code>。 第二个定理将<code>α</code>映射到<code>Quot α</code>，所以如果<code>r:α→α→Prop</code>和<code>a:α</code>，那么<code>Quot.mk r a</code>是<code>Quot r</code>的一个元素。 第三个定理<code>Quot.ind</code>表示<code>Quot.mk r a</code>的每个元素都是这种形式。至于<code>Quot.lift</code>，给定一个函数<code>f:α→β</code>，如果<code>h</code>是一个证明，证明<code>f</code>尊重关系<code>r</code>，那么<code>Quot.lift f h</code>就是在<code>Quot r</code>上对应的函数。其思想是对于<code>α</code>中的每个元素<code>a</code>，函数<code>Quot.lift f h</code>将<code>Quot.mk r a</code>（包含<code>a</code>的<code>r</code>-类）映射到<code>f a</code>，其中<code>h</code>表明该函数是良定义的。实际上，计算原理被声明为一个规约规则，如下面的证明所清楚地说明的。</p>
+<pre><code class="language-lean">def mod7Rel (x y : Nat) : Prop :=
+  x % 7 = y % 7
+
+-- the quotient type
+#check (Quot mod7Rel : Type)
+
+-- the class of a
+#check (Quot.mk mod7Rel 4 : Quot mod7Rel)
+
+def f (x : Nat) : Bool :=
+  x % 7 = 0
+
+theorem f_respects (a b : Nat) (h : mod7Rel a b) : f a = f b := by
+  simp [mod7Rel, f] at *
+  rw [h]
+
+#check (Quot.lift f f_respects : Quot mod7Rel → Bool)
+
+-- the computation principle
+example (a : Nat) : Quot.lift f f_respects (Quot.mk mod7Rel a) = f a :=
+  rfl
+</code></pre>
+<p><code>Quot.sound</code>: For all <code>a₁ a₂ : α</code>, if <code>r a₁ a₂</code>, then <code>quot.mk r a₁ = quot.mk r a₂</code>.</p>
+<p>This axiom ensures that the equivalence relation <code>r</code> is respected by the canonical map <code>quot.mk</code>, meaning that elements that are equivalent under <code>r</code> are mapped to the same element in the quotient type.</p>
+<p>The <code>Quot.sound</code> axiom is crucial for proving the unique existence of the function <code>quot.lift</code>, which allows us to define functions on quotients using the property of the equivalence relation. Without this axiom, it would not be possible to ensure that the definitions on the quotient type are well-defined.</p>
+<p>In summary, while the four constants of the quotient type alone are not very strong, the additional axiom <code>Quot.sound</code> plays a crucial role in making the quotient construction valid and ensuring the well-definedness of functions defined on quotients.</p>
+<pre><code class="language-lean"># namespace Hidden
+# universe u v
+axiom Quot.sound :
+      ∀ {α : Type u} {r : α → α → Prop} {a b : α},
+        r a b → Quot.mk r a = Quot.mk r b
+# end Hidden
+</code></pre>
+<p>这是一条公理，它断言了在<code>α</code>的任意两个<code>r</code>相关的元素在商集中等同。如果一个定理或定义使用了<code>Quot.sound</code>，则它将在<code>#print axioms</code>命令中显示。</p>
+<p>当然，商集构造最常用于<code>r</code>是一个等价关系的情况下。给定如上所述的<code>r</code>，如果我们根据规则<code>r' a b</code>当且仅当<code>Quot.mk r a = Quot.mk r b</code>定义<code>r'</code>，则很明显<code>r'</code>是一个等价关系。事实上，<code>r'</code>是函数<code>a ↦ quot.mk r a</code>的<em>核</em>。公理<code>Quot.sound</code>表示<code>r a b</code>意味着<code>r' a b</code>。使用<code>Quot.lift</code>和<code>Quot.ind</code>，我们可以证明<code>r'</code>是包含<code>r</code>的最小等价关系，即如果<code>r''</code>是包含<code>r</code>的任何等价关系，那么<code>r' a b</code>意味着<code>r'' a b</code>。特别地，如果<code>r</code>一开始就是一个等价关系，那么对于所有<code>a</code>和<code>b</code>，我们有<code>r a b</code>当且仅当<code>r' a b</code>。</p>
+<p>为了支持这种常见用例，标准库定义了<em>setoid</em>的概念，它只是一个带有相关等价关系的类型：</p>
+<pre><code class="language-lean"># namespace Hidden
+class Setoid (α : Sort u) where
+  r : α → α → Prop
+  iseqv : Equivalence r
+
+instance {α : Sort u} [Setoid α] : HasEquiv α :=
+  ⟨Setoid.r⟩
+
+namespace Setoid
+
+variable {α : Sort u} [Setoid α]
+
+theorem refl (a : α) : a ≈ a :=
+  iseqv.refl a
+
+theorem symm {a b : α} (hab : a ≈ b) : b ≈ a :=
+  iseqv.symm hab
+
+theorem trans {a b c : α} (hab : a ≈ b) (hbc : b ≈ c) : a ≈ c :=
+  iseqv.trans hab hbc
+
+end Setoid
+# end Hidden
+</code></pre>
+<p>给定一个类型 <code>α</code>，一个关系 <code>r</code> 在 <code>α</code> 上，以及一个证明 <code>p</code> 说明 <code>r</code> 是一个等价关系，我们可以定义 <code>Setoid.mk r p</code> 作为集合类的一个实例。</p>
+<pre><code class="language-lean"># namespace Hidden
+def Quotient {α : Sort u} (s : Setoid α) :=
+  @Quot α Setoid.r
+# end Hidden
+</code></pre>
+<p>常数 <code>Quotient.mk</code>、<code>Quotient.ind</code>、<code>Quotient.lift</code> 和 <code>Quotient.sound</code> 无非是 <code>Quot</code> 中相应元素的特例。类型类推断可以找到与类型 <code>α</code> 相关联的 Setoid 的事实带来了许多好处。首先，我们可以使用记法 <code>a ≈ b</code>（输入为 <code>\approx</code>）表示 <code>Setoid.r a b</code>，这里的 <code>Setoid</code> 实例在记法 <code>Setoid.r</code> 中是隐含的。我们可以使用通用定理 <code>Setoid.refl</code>、<code>Setoid.symm</code>、<code>Setoid.trans</code> 来推理关系。特别是对于商集，我们可以使用通用记法 <code>⟦a⟧</code> 表示 <code>Quot.mk Setoid.r</code>，这里的 <code>Setoid</code> 实例在记法 <code>Setoid.r</code> 中是隐含的，以及定理<code>Quotient.exact</code>：</p>
+<pre><code class="language-lean"># universe u
+#check (@Quotient.exact :
+         ∀ {α : Sort u} {s : Setoid α} {a b : α},
+           Quotient.mk s a = Quotient.mk s b → a ≈ b)
+</code></pre>
+<p><code>Quot</code> 恰好与<code>Quotient.sound</code>一同出现那么间接地意味着等价类中每个元素与<code>α</code>中的等价类准确对应。</p>
+<p>回想一下，在标准库中，<code>α × β</code> 表示类型 <code>α</code> 和 <code>β</code> 的笛卡尔积。为了说明quotients的使用，让我们首先定义 <em>无序</em> 对的类型，其是类型 <code>α × α</code> 的商。首先，我们定义相关的等价关系：</p>
+<pre><code class="language-lean">private def eqv (p₁ p₂ : α × α) : Prop :=
+  (p₁.1 = p₂.1 ∧ p₁.2 = p₂.2) ∨ (p₁.1 = p₂.2 ∧ p₁.2 = p₂.1)
+
+infix:50 &quot; ~ &quot; =&gt; eqv
+</code></pre>
+<p>下一步是证明 <code>eqv</code> 其实是一个等价关系，也就是说，它是自反的，对称的和传递的。我们可以通过使用依赖模式匹配来执行case-analysis，并将假设分解为能够重新组合以得出结论的部分，以便以一种方便和易读的方式证明这三个事实。</p>
+<pre><code class="language-lean"># private def eqv (p₁ p₂ : α × α) : Prop :=
+#   (p₁.1 = p₂.1 ∧ p₁.2 = p₂.2) ∨ (p₁.1 = p₂.2 ∧ p₁.2 = p₂.1)
+# infix:50 &quot; ~ &quot; =&gt; eqv
+private theorem eqv.refl (p : α × α) : p ~ p :=
+  Or.inl ⟨rfl, rfl⟩
+
+private theorem eqv.symm : ∀ {p₁ p₂ : α × α}, p₁ ~ p₂ → p₂ ~ p₁
+  | (a₁, a₂), (b₁, b₂), (Or.inl ⟨a₁b₁, a₂b₂⟩) =&gt;
+    Or.inl (by simp_all)
+  | (a₁, a₂), (b₁, b₂), (Or.inr ⟨a₁b₂, a₂b₁⟩) =&gt;
+    Or.inr (by simp_all)
+
+private theorem eqv.trans : ∀ {p₁ p₂ p₃ : α × α}, p₁ ~ p₂ → p₂ ~ p₃ → p₁ ~ p₃
+  | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inl ⟨a₁b₁, a₂b₂⟩, Or.inl ⟨b₁c₁, b₂c₂⟩ =&gt;
+    Or.inl (by simp_all)
+  | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inl ⟨a₁b₁, a₂b₂⟩, Or.inr ⟨b₁c₂, b₂c₁⟩ =&gt;
+    Or.inr (by simp_all)
+  | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inr ⟨a₁b₂, a₂b₁⟩, Or.inl ⟨b₁c₁, b₂c₂⟩ =&gt;
+    Or.inr (by simp_all)
+  | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inr ⟨a₁b₂, a₂b₁⟩, Or.inr ⟨b₁c₂, b₂c₁⟩ =&gt;
+    Or.inl (by simp_all)
+
+private theorem is_equivalence : Equivalence (@eqv α) :=
+  { refl := eqv.refl, symm := eqv.symm, trans := eqv.trans }
+</code></pre>
+<p>现在我们已经证明了 <code>eqv</code> 是一个等价关系，我们可以构造一个 <code>Setoid (α × α)</code>，并使用它来定义类型 <code>UProd α</code>，表示无序对。</p>
+<pre><code class="language-lean"># private def eqv (p₁ p₂ : α × α) : Prop :=
+#   (p₁.1 = p₂.1 ∧ p₁.2 = p₂.2) ∨ (p₁.1 = p₂.2 ∧ p₁.2 = p₂.1)
+# infix:50 &quot; ~ &quot; =&gt; eqv
+# private theorem eqv.refl (p : α × α) : p ~ p :=
+#   Or.inl ⟨rfl, rfl⟩
+# private theorem eqv.symm : ∀ {p₁ p₂ : α × α}, p₁ ~ p₂ → p₂ ~ p₁
+#   | (a₁, a₂), (b₁, b₂), (Or.inl ⟨a₁b₁, a₂b₂⟩) =&gt;
+#     Or.inl (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (Or.inr ⟨a₁b₂, a₂b₁⟩) =&gt;
+#     Or.inr (by simp_all)
+# private theorem eqv.trans : ∀ {p₁ p₂ p₃ : α × α}, p₁ ~ p₂ → p₂ ~ p₃ → p₁ ~ p₃
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inl ⟨a₁b₁, a₂b₂⟩, Or.inl ⟨b₁c₁, b₂c₂⟩ =&gt;
+#     Or.inl (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inl ⟨a₁b₁, a₂b₂⟩, Or.inr ⟨b₁c₂, b₂c₁⟩ =&gt;
+#     Or.inr (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inr ⟨a₁b₂, a₂b₁⟩, Or.inl ⟨b₁c₁, b₂c₂⟩ =&gt;
+#     Or.inr (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inr ⟨a₁b₂, a₂b₁⟩, Or.inr ⟨b₁c₂, b₂c₁⟩ =&gt;
+#     Or.inl (by simp_all)
+# private theorem is_equivalence : Equivalence (@eqv α) :=
+#   { refl := eqv.refl, symm := eqv.symm, trans := eqv.trans }
+instance uprodSetoid (α : Type u) : Setoid (α × α) where
+  r     := eqv
+  iseqv := is_equivalence
+
+def UProd (α : Type u) : Type u :=
+  Quotient (uprodSetoid α)
+
+namespace UProd
+
+def mk {α : Type} (a₁ a₂ : α) : UProd α :=
+  Quotient.mk' (a₁, a₂)
+
+notation &quot;{ &quot; a₁ &quot;, &quot; a₂ &quot; }&quot; =&gt; mk a₁ a₂
+
+end UProd
+</code></pre>
+<p>请注意，我们在本地定义了表示有序对的记号 <code>{a₁, a₂}</code>，表示为 <code>Quotient.mk (a₁, a₂)</code>。这在说明的目的上很有用，但一般情况下并不是一个好主意，因为这个记法会使花括号的其他用途（例如记录和集合）被遮盖。</p>
+<p>我们可以很容易地证明 <code>{a₁, a₂} = {a₂, a₁}</code>，使用 <code>Quot.sound</code>，因为我们有 <code>(a₁, a₂) ~ (a₂, a₁)</code>。</p>
+<pre><code class="language-lean"># private def eqv (p₁ p₂ : α × α) : Prop :=
+#   (p₁.1 = p₂.1 ∧ p₁.2 = p₂.2) ∨ (p₁.1 = p₂.2 ∧ p₁.2 = p₂.1)
+# infix:50 &quot; ~ &quot; =&gt; eqv
+# private theorem eqv.refl (p : α × α) : p ~ p :=
+#   Or.inl ⟨rfl, rfl⟩
+# private theorem eqv.symm : ∀ {p₁ p₂ : α × α}, p₁ ~ p₂ → p₂ ~ p₁
+#   | (a₁, a₂), (b₁, b₂), (Or.inl ⟨a₁b₁, a₂b₂⟩) =&gt;
+#     Or.inl (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (Or.inr ⟨a₁b₂, a₂b₁⟩) =&gt;
+#     Or.inr (by simp_all)
+# private theorem eqv.trans : ∀ {p₁ p₂ p₃ : α × α}, p₁ ~ p₂ → p₂ ~ p₃ → p₁ ~ p₃
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inl ⟨a₁b₁, a₂b₂⟩, Or.inl ⟨b₁c₁, b₂c₂⟩ =&gt;
+#     Or.inl (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inl ⟨a₁b₁, a₂b₂⟩, Or.inr ⟨b₁c₂, b₂c₁⟩ =&gt;
+#     Or.inr (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inr ⟨a₁b₂, a₂b₁⟩, Or.inl ⟨b₁c₁, b₂c₂⟩ =&gt;
+#     Or.inr (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inr ⟨a₁b₂, a₂b₁⟩, Or.inr ⟨b₁c₂, b₂c₁⟩ =&gt;
+#     Or.inl (by simp_all)
+# private theorem is_equivalence : Equivalence (@eqv α) :=
+#   { refl := eqv.refl, symm := eqv.symm, trans := eqv.trans }
+# instance uprodSetoid (α : Type u) : Setoid (α × α) where
+#   r     := eqv
+#   iseqv := is_equivalence
+# def UProd (α : Type u) : Type u :=
+#   Quotient (uprodSetoid α)
+# namespace UProd
+# def mk {α : Type} (a₁ a₂ : α) : UProd α :=
+#   Quotient.mk' (a₁, a₂)
+# notation &quot;{ &quot; a₁ &quot;, &quot; a₂ &quot; }&quot; =&gt; mk a₁ a₂
+theorem mk_eq_mk (a₁ a₂ : α) : {a₁, a₂} = {a₂, a₁} :=
+  Quot.sound (Or.inr ⟨rfl, rfl⟩)
+# end UProd
+</code></pre>
+<p>为了完成这个例子，给定<code>a : α</code>和<code>u : uprod α</code>，我们定义命题<code>a ∈ u</code>，如果<code>a</code>是无序对<code>u</code>中的一个元素，那么该命题应该成立。首先，我们在（有序）对上定义类似的命题<code>mem_fn a u</code>；然后我们展示<code>mem_fn</code>与等价关系<code>eqv</code>保持一致，使用引理<code>mem_respects</code>。这是在 Lean 标准库中广泛使用的一种习惯用法。</p>
+<pre><code class="language-lean"># private def eqv (p₁ p₂ : α × α) : Prop :=
+#   (p₁.1 = p₂.1 ∧ p₁.2 = p₂.2) ∨ (p₁.1 = p₂.2 ∧ p₁.2 = p₂.1)
+# infix:50 &quot; ~ &quot; =&gt; eqv
+# private theorem eqv.refl (p : α × α) : p ~ p :=
+#   Or.inl ⟨rfl, rfl⟩
+# private theorem eqv.symm : ∀ {p₁ p₂ : α × α}, p₁ ~ p₂ → p₂ ~ p₁
+#   | (a₁, a₂), (b₁, b₂), (Or.inl ⟨a₁b₁, a₂b₂⟩) =&gt;
+#     Or.inl (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (Or.inr ⟨a₁b₂, a₂b₁⟩) =&gt;
+#     Or.inr (by simp_all)
+# private theorem eqv.trans : ∀ {p₁ p₂ p₃ : α × α}, p₁ ~ p₂ → p₂ ~ p₃ → p₁ ~ p₃
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inl ⟨a₁b₁, a₂b₂⟩, Or.inl ⟨b₁c₁, b₂c₂⟩ =&gt;
+#     Or.inl (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inl ⟨a₁b₁, a₂b₂⟩, Or.inr ⟨b₁c₂, b₂c₁⟩ =&gt;
+#     Or.inr (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inr ⟨a₁b₂, a₂b₁⟩, Or.inl ⟨b₁c₁, b₂c₂⟩ =&gt;
+#     Or.inr (by simp_all)
+#   | (a₁, a₂), (b₁, b₂), (c₁, c₂), Or.inr ⟨a₁b₂, a₂b₁⟩, Or.inr ⟨b₁c₂, b₂c₁⟩ =&gt;
+#     Or.inl (by simp_all)
+# private theorem is_equivalence : Equivalence (@eqv α) :=
+#   { refl := eqv.refl, symm := eqv.symm, trans := eqv.trans }
+# instance uprodSetoid (α : Type u) : Setoid (α × α) where
+#   r     := eqv
+#   iseqv := is_equivalence
+# def UProd (α : Type u) : Type u :=
+#   Quotient (uprodSetoid α)
+# namespace UProd
+# def mk {α : Type} (a₁ a₂ : α) : UProd α :=
+#   Quotient.mk' (a₁, a₂)
+# notation &quot;{ &quot; a₁ &quot;, &quot; a₂ &quot; }&quot; =&gt; mk a₁ a₂
+# theorem mk_eq_mk (a₁ a₂ : α) : {a₁, a₂} = {a₂, a₁} :=
+#   Quot.sound (Or.inr ⟨rfl, rfl⟩)
+private def mem_fn (a : α) : α × α → Prop
+  | (a₁, a₂) =&gt; a = a₁ ∨ a = a₂
+
+-- auxiliary lemma for proving mem_respects
+private theorem mem_swap {a : α} :
+      ∀ {p : α × α}, mem_fn a p = mem_fn a (⟨p.2, p.1⟩)
+  | (a₁, a₂) =&gt; by
+    apply propext
+    apply Iff.intro
+    . intro
+      | Or.inl h =&gt; exact Or.inr h
+      | Or.inr h =&gt; exact Or.inl h
+    . intro
+      | Or.inl h =&gt; exact Or.inr h
+      | Or.inr h =&gt; exact Or.inl h
+
+
+private theorem mem_respects
+      : {p₁ p₂ : α × α} → (a : α) → p₁ ~ p₂ → mem_fn a p₁ = mem_fn a p₂
+  | (a₁, a₂), (b₁, b₂), a, Or.inl ⟨a₁b₁, a₂b₂⟩ =&gt; by simp_all
+  | (a₁, a₂), (b₁, b₂), a, Or.inr ⟨a₁b₂, a₂b₁⟩ =&gt; by simp_all; apply mem_swap
+
+def mem (a : α) (u : UProd α) : Prop :=
+  Quot.liftOn u (fun p =&gt; mem_fn a p) (fun p₁ p₂ e =&gt; mem_respects a e)
+
+infix:50 (priority := high) &quot; ∈ &quot; =&gt; mem
+
+theorem mem_mk_left (a b : α) : a ∈ {a, b} :=
+  Or.inl rfl
+
+theorem mem_mk_right (a b : α) : b ∈ {a, b} :=
+  Or.inr rfl
+
+theorem mem_or_mem_of_mem_mk {a b c : α} : c ∈ {a, b} → c = a ∨ c = b :=
+  fun h =&gt; h
+# end UProd
+</code></pre>
+<p>为了方便起见，标准库还定义了 <code>Quotient.lift₂</code> 用于将二元函数提升，以及 <code>Quotient.ind₂</code> 用于对两个变量进行归纳。</p>
+<p>在本节中，我们给出了关于商构造怎样暗示了函数外延性的一些提示。不难证明，对于类型 <code>(x : α) → β x</code> 上的外延等价是一个等价关系，因此我们可以考虑函数 &quot;在等价关系下的等价类&quot; 的类型 <code>extfun α β</code>。当然，应用操作保持了等价关系，也就是说如果 <code>f₁</code> 等价于 <code>f₂</code>，则 <code>f₁ a</code> 等于 <code>f₂ a</code>。因此应用操作产生了一个函数 <code>extfun_app : extfun α β → (x : α) → β x</code>。但是对于每个 <code>f</code>，<code>extfun_app ⟦f⟧</code> 在定义上等于 <code>fun x =&gt; f x</code>，这又在定义上等于 <code>f</code>。所以，当 <code>f₁</code> 和 <code>f₂</code> 在外延上相等时，我们有以下一连串的等式：</p>
+<pre><code>    f₁ = extfun_app ⟦f₁⟧ = extfun_app ⟦f₂⟧ = f₂
+</code></pre>
+<p>结果是，<code>f₁</code> 等于 <code>f₂</code>。</p>
+<h2 id="选择"><a class="header" href="#选择">选择</a></h2>
+<p>为了陈述标准库中定义的最终公理，我们需要 <code>Nonempty</code> 类型，其定义如下：</p>
+<pre><code class="language-lean"># namespace Hidden
+class inductive Nonempty (α : Sort u) : Prop where
+  | intro (val : α) : Nonempty α
+# end Hidden
+</code></pre>
+<p>因为<code>Nonempty α</code>的类型是<code>Prop</code>，它的构造器包含数据，所以只能消除为<code>Prop</code>。
+实际上，<code>Nonempty α</code>等价于<code>∃ x : α, True</code>。</p>
+<pre><code class="language-lean">example (α : Type u) : Nonempty α ↔ ∃ x : α, True :=
+  Iff.intro (fun ⟨a⟩ =&gt; ⟨a, trivial⟩) (fun ⟨a, h⟩ =&gt; ⟨a⟩)
+</code></pre>
+<p>我们的选择公理可以简单地表述如下：</p>
+<pre><code class="language-lean"># namespace Hidden
+# universe u
+axiom choice {α : Sort u} : Nonempty α → α
+# end Hidden
+</code></pre>
+<p>根据给出的断言 “h”，即 “α” 是非空的，<code>choice h</code> 神奇般地产生了 <code>α</code> 的一个元素。当然，这会阻止任何有意义的计算：根据 <code>Prop</code> 的解释，<code>h</code> 并不包含任何关于如何找到这样的元素的信息。</p>
+<p>这个定理位于 <code>Classical</code> 命名空间中，因此定理的全名是 <code>Classical.choice</code>。选择原则等价于<em>不定描述原理</em>，可以用子类型来表达，如下所示：</p>
+<pre><code class="language-lean"># namespace Hidden
+# universe u
+# axiom choice {α : Sort u} : Nonempty α → α
+noncomputable def indefiniteDescription {α : Sort u} (p : α → Prop)
+                                        (h : ∃ x, p x) : {x // p x} :=
+  choice &lt;| let ⟨x, px⟩ := h; ⟨⟨x, px⟩⟩
+# end Hidden
+</code></pre>
+<p>由于它依赖于<code>choice</code>，Lean 无法为<code>indefiniteDescription</code>生成字节码，因此需要我们将定义标记为<code>noncomputable</code>。在<code>Classical</code>命名空间中，函数<code>choose</code>和属性<code>choose_spec</code>将<code>indefiniteDescription</code>的输出分解为两部分：</p>
+<pre><code class="language-lean"># open Classical
+# namespace Hidden
+noncomputable def choose {α : Sort u} {p : α → Prop} (h : ∃ x, p x) : α :=
+  (indefiniteDescription p h).val
+
+theorem choose_spec {α : Sort u} {p : α → Prop} (h : ∃ x, p x) : p (choose h) :=
+  (indefiniteDescription p h).property
+# end Hidden
+</code></pre>
+<p><code>选择</code>原则也消除了<code>非空</code>和更具建设性的<code>有人居住</code>属性之间的区别：</p>
+<pre><code class="language-lean"># open Classical
+theorem inhabited_of_nonempty : Nonempty α → Inhabited α :=
+  fun h =&gt; choice (let ⟨a⟩ := h; ⟨⟨a⟩⟩)
+</code></pre>
+<p>在下一部分中，我们将看到 <code>propext</code>、<code>funext</code>和<code>choice</code>三者联合起来暗含了排中律和所有命题的可决定性。利用这些，我们可以加强“不确定描述”的原则，具体如下所示：</p>
+<pre><code class="language-lean"># open Classical
+# universe u
+#check (@strongIndefiniteDescription :
+         {α : Sort u} → (p : α → Prop)
+         → Nonempty α → {x // (∃ (y : α), p y) → p x})
+</code></pre>
+<p>假设环境类型<code>α</code>非空，</p>
+<p>如果存在条件<code>p</code>满足的<code>strongIndefiniteDescription p</code>，</p>
+<p>那么它会产生一个满足<code>p</code>的<code>α</code>元素。</p>
+<p>这个定义的数据部分通常被称为 <em>希尔伯特的epsilon函数</em>。</p>
+<pre><code class="language-lean"># open Classical
+# universe u
+#check (@epsilon :
+         {α : Sort u} → [Nonempty α]
+         → (α → Prop) → α)
+
+#check (@epsilon_spec :
+         ∀ {α : Sort u} {p : α → Prop} (hex : ∃ (y : α), p y),
+           p (@epsilon _ (nonempty_of_exists hex) p))
+</code></pre>
+<p>中文翻译：</p>
+<h2 id="排中律"><a class="header" href="#排中律">排中律</a></h2>
+<p>排中律是以下的陈述：</p>
+<pre><code class="language-lean">open Classical
+
+#check (@em : ∀ (p : Prop), p ∨ ¬p)
+</code></pre>
+<p><a href="https://en.wikipedia.org/wiki/Diaconescu%27s_theorem">Diaconescu定理</a>说明选择公理足以推导出排中律。更具体地说，它表明排中律可以从<code>Classical.choice</code>、<code>propext</code>和<code>funext</code>推得。我们概述一下在标准库中找到的证明。</p>
+<p>首先，我们导入必要的公理，并定义两个谓词<code>U</code>和<code>V</code>：</p>
+<pre><code class="language-lean"># namespace Hidden
+open Classical
+theorem em (p : Prop) : p ∨ ¬p :=
+  let U (x : Prop) : Prop := x = True ∨ p
+  let V (x : Prop) : Prop := x = False ∨ p
+
+  have exU : ∃ x, U x := ⟨True, Or.inl rfl⟩
+  have exV : ∃ x, V x := ⟨False, Or.inl rfl⟩
+#   sorry
+# end Hidden
+</code></pre>
+<p>如果 <code>p</code> 为真，则<code>Prop</code>的所有元素都属于 <code>U</code> 和 <code>V</code>。
+如果 <code>p</code> 为假，则 <code>U</code> 是单元素集合 <code>true</code>，<code>V</code> 是单元素集合 <code>false</code>。</p>
+<p>接下来，我们使用 <code>some</code> 从 <code>U</code> 和 <code>V</code> 中选择一个元素：</p>
+<pre><code class="language-lean"># namespace Hidden
+# open Classical
+# theorem em (p : Prop) : p ∨ ¬p :=
+#   let U (x : Prop) : Prop := x = True ∨ p
+#   let V (x : Prop) : Prop := x = False ∨ p
+#   have exU : ∃ x, U x := ⟨True, Or.inl rfl⟩
+#   have exV : ∃ x, V x := ⟨False, Or.inl rfl⟩
+  let u : Prop := choose exU
+  let v : Prop := choose exV
+
+  have u_def : U u := choose_spec exU
+  have v_def : V v := choose_spec exV
+#   sorry
+# end Hidden
+</code></pre>
+<p><code>U</code>和<code>V</code>都是析取式，所以<code>u_def</code>和<code>v_def</code>表示了四种情况。在这四种情况中，其中一种是<code>u = True</code>且<code>v = False</code>，而在其他的情况中，<code>p</code>为真。因此我们有：</p>
+<pre><code class="language-lean"># namespace Hidden
+# open Classical
+# theorem em (p : Prop) : p ∨ ¬p :=
+#   let U (x : Prop) : Prop := x = True ∨ p
+#   let V (x : Prop) : Prop := x = False ∨ p
+#   have exU : ∃ x, U x := ⟨True, Or.inl rfl⟩
+#   have exV : ∃ x, V x := ⟨False, Or.inl rfl⟩
+#   let u : Prop := choose exU
+#   let v : Prop := choose exV
+#   have u_def : U u := choose_spec exU
+#   have v_def : V v := choose_spec exV
+  have not_uv_or_p : u ≠ v ∨ p :=
+    match u_def, v_def with
+    | Or.inr h, _ =&gt; Or.inr h
+    | _, Or.inr h =&gt; Or.inr h
+    | Or.inl hut, Or.inl hvf =&gt;
+      have hne : u ≠ v := by simp [hvf, hut, true_ne_false]
+      Or.inl hne
+#   sorry
+# end Hidden
+</code></pre>
+<p>另一方面，如果 <code>p</code> 为真，则根据函数外延性和命题外延性，<code>U</code> 和 <code>V</code> 是相等的。根据<code>u</code>和<code>v</code>的定义，这意味着它们也是相等的。</p>
+<pre><code class="language-lean"># namespace Hidden
+# open Classical
+# theorem em (p : Prop) : p ∨ ¬p :=
+#   let U (x : Prop) : Prop := x = True ∨ p
+#   let V (x : Prop) : Prop := x = False ∨ p
+#   have exU : ∃ x, U x := ⟨True, Or.inl rfl⟩
+#   have exV : ∃ x, V x := ⟨False, Or.inl rfl⟩
+#   let u : Prop := choose exU
+#   let v : Prop := choose exV
+#   have u_def : U u := choose_spec exU
+#   have v_def : V v := choose_spec exV
+#   have not_uv_or_p : u ≠ v ∨ p :=
+#     match u_def, v_def with
+#     | Or.inr h, _ =&gt; Or.inr h
+#     | _, Or.inr h =&gt; Or.inr h
+#     | Or.inl hut, Or.inl hvf =&gt;
+#       have hne : u ≠ v := by simp [hvf, hut, true_ne_false]
+#       Or.inl hne
+  have p_implies_uv : p → u = v :=
+    fun hp =&gt;
+    have hpred : U = V :=
+      funext fun x =&gt;
+        have hl : (x = True ∨ p) → (x = False ∨ p) :=
+          fun _ =&gt; Or.inr hp
+        have hr : (x = False ∨ p) → (x = True ∨ p) :=
+          fun _ =&gt; Or.inr hp
+        show (x = True ∨ p) = (x = False ∨ p) from
+          propext (Iff.intro hl hr)
+    have h₀ : ∀ exU exV, @choose _ U exU = @choose _ V exV := by
+      rw [hpred]; intros; rfl
+    show u = v from h₀ _ _
+#   sorry
+# end Hidden
+</code></pre>
+<p>将这最后两个事实结合起来，得出了所需的结论：</p>
+<pre><code class="language-lean"># namespace Hidden
+# open Classical
+# theorem em (p : Prop) : p ∨ ¬p :=
+#   let U (x : Prop) : Prop := x = True ∨ p
+#   let V (x : Prop) : Prop := x = False ∨ p
+#   have exU : ∃ x, U x := ⟨True, Or.inl rfl⟩
+#   have exV : ∃ x, V x := ⟨False, Or.inl rfl⟩
+#   let u : Prop := choose exU
+#   let v : Prop := choose exV
+#   have u_def : U u := choose_spec exU
+#   have v_def : V v := choose_spec exV
+#   have not_uv_or_p : u ≠ v ∨ p :=
+#     match u_def, v_def with
+#     | Or.inr h, _ =&gt; Or.inr h
+#     | _, Or.inr h =&gt; Or.inr h
+#     | Or.inl hut, Or.inl hvf =&gt;
+#       have hne : u ≠ v := by simp [hvf, hut, true_ne_false]
+#       Or.inl hne
+#   have p_implies_uv : p → u = v :=
+#     fun hp =&gt;
+#     have hpred : U = V :=
+#       funext fun x =&gt;
+#         have hl : (x = True ∨ p) → (x = False ∨ p) :=
+#           fun _ =&gt; Or.inr hp
+#         have hr : (x = False ∨ p) → (x = True ∨ p) :=
+#           fun _ =&gt; Or.inr hp
+#         show (x = True ∨ p) = (x = False ∨ p) from
+#           propext (Iff.intro hl hr)
+#     have h₀ : ∀ exU exV, @choose _ U exU = @choose _ V exV := by
+#       rw [hpred]; intros; rfl
+#     show u = v from h₀ _ _
+  match not_uv_or_p with
+  | Or.inl hne =&gt; Or.inr (mt p_implies_uv hne)
+  | Or.inr h   =&gt; Or.inl h
+# end Hidden
+</code></pre>
+<p>排中律的推论包括双重否定消除、按情况证明和反证法等，这些都在<a href="./propositions_and_proofs.html#classical-logic">经典逻辑章节</a>中进行了描述。排中律和命题外延性暗示了命题完备性：</p>
+<pre><code class="language-lean"># namespace Hidden
+open Classical
+theorem propComplete (a : Prop) : a = True ∨ a = False :=
+  match em a with
+  | Or.inl ha =&gt; Or.inl (propext (Iff.intro (fun _ =&gt; ⟨⟩) (fun _ =&gt; ha)))
+  | Or.inr hn =&gt; Or.inr (propext (Iff.intro (fun h =&gt; hn h) (fun h =&gt; False.elim h)))
+# end Hidden
+</code></pre>
+<p>我们还得到了一个更强的原则，即每个命题都是可决定的。回顾一下，“可决定”命题的定义如下：</p>
+<pre><code class="language-lean"># namespace Hidden
+class inductive Decidable (p : Prop) where
+  | isFalse (h : ¬p) : Decidable p
+  | isTrue  (h : p)  : Decidable p
+# end Hidden
+</code></pre>
+<p>与只能消解为 <code>Prop</code> 的 <code>p ∨ ¬ p</code> 不同，类型 <code>Decidable p</code> 等同于和类型 <code>Sum p (¬ p)</code>
+，它可以消解为任何类型。正是这个数据类型，使得我们能够编写 if-then-else 表达式。</p>
+<p>作为经典推理的一个例子，我们使用 <code>choose</code> 来证明如果 <code>f : α → β</code> 是单射并且 <code>α</code> 是非空的，那么
+<code>f</code> 具有一个左逆。为了定义左逆 <code>linv</code>，我们使用了一个依赖的 if-then-else 表达式。回想一下，
+<code>if h : c then t else e</code> 是 <code>dite c (fun h : c =&gt; t) (fun h : ¬ c =&gt; e)</code> 的简记法。在定义
+<code>linv</code> 中，选择被使用了两次：首先，用来证明 <code>∃ a : A, f a = b</code> 是“可判的”，然后用来选择一个
+使得 <code>f a = b</code> 的 <code>a</code>。请注意，<code>propDecidable</code> 是一种局部实例，并且通过 <code>open Classical</code>
+命令被激活。我们使用这个实例来证明 if-then-else 表达式的合理性（参见<a href="./type_classes.html#decidable-propositions">可判命题一节</a>中的讨论）。</p>
+<pre><code class="language-lean">open Classical
+
+noncomputable def linv [Inhabited α] (f : α → β) : β → α :=
+  fun b : β =&gt; if ex : (∃ a : α, f a = b) then choose ex else default
+
+theorem linv_comp_self {f : α → β} [Inhabited α]
+                       (inj : ∀ {a b}, f a = f b → a = b)
+                       : linv f ∘ f = id :=
+  funext fun a =&gt;
+    have ex  : ∃ a₁ : α, f a₁ = f a := ⟨a, rfl⟩
+    have feq : f (choose ex) = f a  := choose_spec ex
+    calc linv f (f a)
+      _ = choose ex := dif_pos ex
+      _ = a         := inj feq
+</code></pre>
+<p>从传统的观点来看，“linv”是一个函数。从建设性的观点来看，它是不可接受的；因为通常情况下没有方法可以实现这样的函数，所以这个构造方法是没有信息量的。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="conv.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="conv.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
