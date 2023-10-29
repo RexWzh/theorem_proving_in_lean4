@@ -6,7 +6,7 @@ src = "zhsource"
 title = "Theorem Proving in Lean 4"
 
 [build]
-build-dir = "out"
+build-dir = "build"
 
 [output.html]
 git-repository-url = "https://github.com/RexWzh/theorem_proving_in_lean4"
